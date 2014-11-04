@@ -14,6 +14,7 @@ public class SaveController implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		model.save(model.listTweets);
 
 	}
 

@@ -68,10 +68,11 @@ public class Model extends Observable {
 	 */
 	public void save(List<Status> tweets) {
 		int i = 0;
+
 		try {
 			FileWriter writer = new FileWriter(
-					"/Users/sais/Documents/workspace/TwitterProject/tweets/tweets.csv",
-					true);
+					new java.io.File(".").getCanonicalPath()
+							+ "/tweets/tweets.csv", true);
 			for (Status tweet : tweets) {
 
 				writer.write(tweet.getId() + ";" + tweet.getUser().getName()
@@ -80,10 +81,10 @@ public class Model extends Observable {
 			}
 			writer.close();
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException e) { // TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 
 	/**
@@ -96,7 +97,8 @@ public class Model extends Observable {
 	 */
 	public boolean alreadyIn(long id) {
 		try {
-			String chemin = "/Users/sais/Documents/workspace/TwitterProject/tweets/tweets.csv";
+			String chemin = new java.io.File(".").getCanonicalPath()
+					+ "/tweets/tweets.csv";
 			@SuppressWarnings("resource")
 			BufferedReader fichier_source = new BufferedReader(new FileReader(
 					chemin));
@@ -334,6 +336,7 @@ public class Model extends Observable {
 		String[] tab1 = t1.split(" ");
 		String[] tab2 = t2.split(" ");
 		nbTotal = tab1.length + tab2.length;
+
 		for (String element : tab1) {
 			for (String element2 : tab2) {
 				if (element.equals(element2)) {
@@ -346,6 +349,7 @@ public class Model extends Observable {
 	}
 
 	public int knn(String t, int k) {
+
 		for (int i = 1; i <= k; i++) {
 
 		}
