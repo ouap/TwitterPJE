@@ -1,7 +1,6 @@
 package model;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -39,10 +38,26 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * Usage: java twitter4j.examples.search.SearchTweets [query]
-	 *
-	 * @param args
-	 *            search query
+	 * Retourne la limite d'appel à l'API Twitter restante
+	 * 
+	 * @return La limite d'appel restante
+	 * @throws TwitterException
+	 */
+	public String getLimit() throws TwitterException {
+		Twitter twitter = new TwitterFactory().getInstance();
+		String limit, remaining;
+		RateLimitStatus status = twitter.getRateLimitStatus().get(
+				"/search/tweets");
+		limit = Integer.toString(status.getLimit());
+		remaining = Integer.toString(status.getRemaining());
+	
+		return "Limite : " + remaining + "/" + limit;
+	
+	}
+
+	/**
+	 * @param keyWord
+	 * @return
 	 */
 	public List<Status> doSearch(String keyWord) {
 		Twitter twitter = new TwitterFactory().getInstance();
@@ -62,9 +77,33 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * Methode qui sauvegarde les tweets recherchés dans un csv
+	 * Permet de charger les tweets du fichier csv
+	 * 
+	 * @param fichier
+	 *            le nom du fichier csv à charger
+	 */
+	public static void chargerTweet(String fichier) {
+		try {
+			InputStream ips = new FileInputStream(fichier);
+			InputStreamReader ipsr = new InputStreamReader(ips);
+			BufferedReader br = new BufferedReader(ipsr);
+			String ligne;
+			while ((ligne = br.readLine()) != null) {
+				System.out.println(ligne);
+			}
+			br.close();
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+	
+	}
+
+	/**
+	 * Methode qui sauvegarde les tweets recherchés dans un csv aprés les avoir
+	 * néttoyé et classés
 	 * 
 	 * @param tweets
+	 *            la liste des tweets de la recherche
 	 */
 	public void save(List<Status> tweets) {
 		int i = 0;
@@ -74,10 +113,14 @@ public class Model extends Observable {
 					new java.io.File(".").getCanonicalPath()
 							+ "/tweets/tweets.csv", true);
 			for (Status tweet : tweets) {
+				// Nettoyage du tweet + récupération de sa classe
+				String text = nettoyerTweet(tweet.getText());
+				int classe = getClassePosNeg(text);
 
+				// Ecriture
 				writer.write(tweet.getId() + ";" + tweet.getUser().getName()
-						+ ";" + tweet.getText() + ";" + tweet.getCreatedAt()
-						+ ";" + recherche + ";" + noteTweets[i++] + "\n");
+						+ ";" + text + ";" + tweet.getCreatedAt() + ";"
+						+ recherche + ";" + classe + "\n");
 			}
 			writer.close();
 
@@ -127,114 +170,62 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * @return La limite restante d'appel à l'api twitter
-	 * @throws TwitterException
+	 * @param fichier
+	 * @param copy
+	 * @throws IOException
 	 */
-	public String getLimit() throws TwitterException {
-		Twitter twitter = new TwitterFactory().getInstance();
-		String limit, remaining;
-		RateLimitStatus status = twitter.getRateLimitStatus().get(
-				"/search/tweets");
-		limit = Integer.toString(status.getLimit());
-		remaining = Integer.toString(status.getRemaining());
-
-		return "Limite : " + remaining + "/" + limit;
-
+	public String nettoyerTweet(String tweet) throws IOException {
+	
+		/* Nettoyage */
+		String l0 = Pattern.compile("@[a-zA-Z0-9]*( | : | :|: |:)")
+				.matcher(tweet).replaceAll("@");
+		String l1 = Pattern.compile("@|#|RT |URL").matcher(l0).replaceAll("");
+		String l2 = Pattern.compile("(http|https)://([^; ])*").matcher(l1)
+				.replaceAll("");
+		String l3 = Pattern.compile("(http|https)://").matcher(l2)
+				.replaceAll("");
+		String l4 = Pattern.compile("(http|https):/").matcher(l3)
+				.replaceAll("");
+		String l5 = Pattern.compile("(http|https):").matcher(l4).replaceAll("");
+		String l6 = Pattern.compile("(http|https)").matcher(l5).replaceAll("");
+	
+		/*
+		 * J'ai supprimé toute la ponctuation
+		 */
+	
+		String l7 = Pattern.compile(" \\. | \\.|\\. ").matcher(l6)
+				.replaceAll(" ");
+		String l8 = Pattern.compile(" ! | !|! ").matcher(l7).replaceAll(" ");
+		String l9 = Pattern.compile(" \\? |\\? | \\?").matcher(l8)
+				.replaceAll(" ");
+		String l10 = Pattern.compile(" : | :|: ").matcher(l9).replaceAll(" ");
+		String cleanTweet = Pattern.compile(" , | ,|, ").matcher(l10)
+				.replaceAll(" ");
+	
+		return cleanTweet;
 	}
 
-	public static void chargerTweet(String fichier) {
-		try {
-			InputStream ips = new FileInputStream(fichier);
-			InputStreamReader ipsr = new InputStreamReader(ips);
-			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			while ((ligne = br.readLine()) != null) {
-				System.out.println(ligne);
+	/**
+	 * Retourne la classe d'un tweet en fonction du nb de mot positif/négatif
+	 * 
+	 * @param tweet
+	 *            Le tweet à classer
+	 * @return la classe du tweet
+	 */
+	int getClassePosNeg(String tweet) {
+		/* Annotation */
+		int positif = motsPositifs(tweet);
+		int negatif = motsNegatifs(tweet);
+
+		int result = positif - negatif;
+		if (result > 0) {
+			return 4;
+		} else {
+			if (result < 0) {
+				return 0;
+			} else {
+				return 2;
 			}
-			br.close();
-		} catch (Exception e) {
-			System.out.println(e.toString());
-		}
-
-	}
-
-	public static void nettoyerFichier(String fichier, String copy)
-			throws IOException {
-		int positif = 0;
-		int negatif = 0;
-		int classification;
-		FileWriter fw = new FileWriter(copy, false);
-		try {
-			InputStream ips = new FileInputStream(fichier);
-			InputStreamReader ipsr = new InputStreamReader(ips);
-			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			String tmp = " ";
-			BufferedWriter output = new BufferedWriter(fw);
-			while ((ligne = br.readLine()) != null) {
-
-				/* Récupération du tweet */
-				String tweet[] = ligne.split(";");
-
-				/* Nettoyage */
-				String l0 = Pattern.compile("@[a-zA-Z0-9]*( | : | :|: |:)")
-						.matcher(tweet[2]).replaceAll("@");
-				String l1 = Pattern.compile("@|#|RT |URL").matcher(l0)
-						.replaceAll("");
-				String l2 = Pattern.compile("(http|https)://([^; ])*")
-						.matcher(l1).replaceAll("");
-				String l3 = Pattern.compile("(http|https)://").matcher(l2)
-						.replaceAll("");
-				String l4 = Pattern.compile("(http|https):/").matcher(l3)
-						.replaceAll("");
-				String l5 = Pattern.compile("(http|https):").matcher(l4)
-						.replaceAll("");
-				String l6 = Pattern.compile("(http|https)").matcher(l5)
-						.replaceAll("");
-
-				/*
-				 * J'ai supprimé toute la ponctuation
-				 */
-
-				String l7 = Pattern.compile(" \\. | \\.|\\. ").matcher(l6)
-						.replaceAll(" ");
-				String l8 = Pattern.compile(" ! | !|! ").matcher(l7)
-						.replaceAll(" ");
-				String l9 = Pattern.compile(" \\? |\\? | \\?").matcher(l8)
-						.replaceAll(" ");
-				String l10 = Pattern.compile(" : | :|: ").matcher(l9)
-						.replaceAll(" ");
-				String nettoye = Pattern.compile(" , | ,|, ").matcher(l10)
-						.replaceAll(" ");
-
-				if (!(nettoye.equals(tmp))) {
-
-					/* Annotation */
-					positif = motsPositifs(nettoye);
-					negatif = motsNegatifs(nettoye);
-
-					int result = positif - negatif;
-					if (result > 0) {
-						classification = 4;
-					} else {
-						if (result < 0) {
-							classification = 0;
-						} else {
-							classification = 2;
-						}
-					}
-
-					output.write(nettoye + " " + classification + "\n");
-
-					output.flush();
-				}
-				tmp = nettoye;
-			}
-
-			output.close();
-			br.close();
-		} catch (Exception e) {
-			System.out.println(e.toString());
 		}
 	}
 
@@ -248,7 +239,9 @@ public class Model extends Observable {
 	public static int motsPositifs(String tweet) {
 		int positif = 0;
 		try {
-			InputStream ips = new FileInputStream("positive.txt");
+			String chemin = new java.io.File(".").getCanonicalPath()
+					+ "/tweets/positive.txt";
+			InputStream ips = new FileInputStream(chemin);
 			InputStreamReader ipsr = new InputStreamReader(ips);
 			@SuppressWarnings("resource")
 			BufferedReader br = new BufferedReader(ipsr);
@@ -295,7 +288,9 @@ public class Model extends Observable {
 	public static int motsNegatifs(String tweet) {
 		int negatif = 0;
 		try {
-			InputStream ips = new FileInputStream("negative.txt");
+			String chemin = new java.io.File(".").getCanonicalPath()
+					+ "/tweets/negative.txt";
+			InputStream ips = new FileInputStream(chemin);
 			InputStreamReader ipsr = new InputStreamReader(ips);
 			@SuppressWarnings("resource")
 			BufferedReader br = new BufferedReader(ipsr);
@@ -330,6 +325,11 @@ public class Model extends Observable {
 		return negatif;
 	}
 
+	/**
+	 * @param t1
+	 * @param t2
+	 * @return
+	 */
 	public static int distanceTweet(String t1, String t2) {
 		int nbTotal = 0;
 		int nbMotsCommuns = 0;
@@ -344,19 +344,39 @@ public class Model extends Observable {
 				}
 			}
 		}
+
 		System.out.println(nbMotsCommuns);
 		return ((nbTotal - nbMotsCommuns) / nbTotal);
 	}
 
-	public int knn(String t, int k) {
-
-		for (int i = 1; i <= k; i++) {
-
+	public int knn(String t, int k) throws IOException {
+		String fichier = new java.io.File(".").getCanonicalPath()
+				+ "/tweets/tweets.csv";
+		String tweet;
+		int distance;
+		for (Status tweetliste : listTweets) {
+			try {
+				InputStream ips = new FileInputStream(fichier);
+				InputStreamReader ipsr = new InputStreamReader(ips);
+				BufferedReader br = new BufferedReader(ipsr);
+				String ligne;
+				while ((ligne = br.readLine()) != null) {
+					String[] tab = ligne.split(";");
+					tweet = tab[2];
+					int tmp = distanceTweet(tweetliste.getText(), tweet);
+					// System.out.println(ligne);
+				}
+				br.close();
+			} catch (Exception e) {
+				System.out.println(e.toString());
+			}
 		}
+
 		return k;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		new View(new Model());
+
 	}
 }

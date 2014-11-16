@@ -1,1 +1,9 @@
 /bin/
+
+tweets/tweets.csv
+
+tweets/negative.txt
+
+tweets/positive.txt
+
+twitter4j.properties
