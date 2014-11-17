@@ -8,7 +8,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.regex.Pattern;
 
@@ -50,14 +53,17 @@ public class Model extends Observable {
 				"/search/tweets");
 		limit = Integer.toString(status.getLimit());
 		remaining = Integer.toString(status.getRemaining());
-	
+
 		return "Limite : " + remaining + "/" + limit;
-	
+
 	}
 
 	/**
+	 * Méthode qui réalise une recherche de tweet à l'aide de l'API
+	 * 
 	 * @param keyWord
-	 * @return
+	 *            le mot clé de la recherche à effectuer
+	 * @return la liste de Status correspondant à la recherche
 	 */
 	public List<Status> doSearch(String keyWord) {
 		Twitter twitter = new TwitterFactory().getInstance();
@@ -95,7 +101,7 @@ public class Model extends Observable {
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
-	
+
 	}
 
 	/**
@@ -115,7 +121,7 @@ public class Model extends Observable {
 			for (Status tweet : tweets) {
 				// Nettoyage du tweet + récupération de sa classe
 				String text = nettoyerTweet(tweet.getText());
-				int classe = getClassePosNeg(text);
+				int classe = knn(text, 3);
 
 				// Ecriture
 				writer.write(tweet.getId() + ";" + tweet.getUser().getName()
@@ -136,7 +142,7 @@ public class Model extends Observable {
 	 * 
 	 * @param id
 	 *            L'id du tweet à tester
-	 * @return
+	 * @return vrai si le tweet est déjà dans le fichier csv, faux sinon
 	 */
 	public boolean alreadyIn(long id) {
 		try {
@@ -175,7 +181,7 @@ public class Model extends Observable {
 	 * @throws IOException
 	 */
 	public String nettoyerTweet(String tweet) throws IOException {
-	
+
 		/* Nettoyage */
 		String l0 = Pattern.compile("@[a-zA-Z0-9]*( | : | :|: |:)")
 				.matcher(tweet).replaceAll("@");
@@ -188,11 +194,11 @@ public class Model extends Observable {
 				.replaceAll("");
 		String l5 = Pattern.compile("(http|https):").matcher(l4).replaceAll("");
 		String l6 = Pattern.compile("(http|https)").matcher(l5).replaceAll("");
-	
+
 		/*
 		 * J'ai supprimé toute la ponctuation
 		 */
-	
+
 		String l7 = Pattern.compile(" \\. | \\.|\\. ").matcher(l6)
 				.replaceAll(" ");
 		String l8 = Pattern.compile(" ! | !|! ").matcher(l7).replaceAll(" ");
@@ -201,7 +207,7 @@ public class Model extends Observable {
 		String l10 = Pattern.compile(" : | :|: ").matcher(l9).replaceAll(" ");
 		String cleanTweet = Pattern.compile(" , | ,|, ").matcher(l10)
 				.replaceAll(" ");
-	
+
 		return cleanTweet;
 	}
 
@@ -230,11 +236,12 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * Calcule le nombre de mots positifs dans le tweet
+	 * Calcule le nombre de mots positifs d'un tweet
 	 * 
-	 * @param un
-	 *            tweet
-	 * @return le nombre de mots positifs
+	 * @param tweet
+	 *            le tweet à tester
+	 * 
+	 * @return le nombre de mots positifs du tweet
 	 */
 	public static int motsPositifs(String tweet) {
 		int positif = 0;
@@ -279,11 +286,11 @@ public class Model extends Observable {
 	}
 
 	/**
-	 * Calcule le nombre de mots negatifs dans le tweet
+	 * Calcule le nombre de mots négatifs d'un tweet
 	 * 
-	 * @param un
-	 *            tweet
-	 * @return le nombre de mots negatifs
+	 * @param tweet
+	 *            le tweet à tester
+	 * @return le nombre de mots négatifs de ce tweet
 	 */
 	public static int motsNegatifs(String tweet) {
 		int negatif = 0;
@@ -326,9 +333,13 @@ public class Model extends Observable {
 	}
 
 	/**
+	 * Retourne la distance entre deux tweets
+	 * 
 	 * @param t1
+	 *            le tweet 1
 	 * @param t2
-	 * @return
+	 *            le tweet 2
+	 * @return la distance entre les tweets t1 et t2
 	 */
 	public static int distanceTweet(String t1, String t2) {
 		int nbTotal = 0;
@@ -345,34 +356,139 @@ public class Model extends Observable {
 			}
 		}
 
-		System.out.println(nbMotsCommuns);
+		// System.out.println(nbMotsCommuns);
 		return ((nbTotal - nbMotsCommuns) / nbTotal);
 	}
 
+	/**
+	 * Classe un tweet à l'aide de la méthode de classification knn
+	 * 
+	 * @param t
+	 *            le tweet à classer
+	 * @param k
+	 *            le nombre de voisins à prendre en compte
+	 * @return la classe associée au tweet
+	 * @throws IOException
+	 */
 	public int knn(String t, int k) throws IOException {
+		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
+		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
 		String fichier = new java.io.File(".").getCanonicalPath()
 				+ "/tweets/tweets.csv";
-		String tweet;
-		int distance;
-		for (Status tweetliste : listTweets) {
-			try {
-				InputStream ips = new FileInputStream(fichier);
-				InputStreamReader ipsr = new InputStreamReader(ips);
-				BufferedReader br = new BufferedReader(ipsr);
-				String ligne;
-				while ((ligne = br.readLine()) != null) {
-					String[] tab = ligne.split(";");
-					tweet = tab[2];
-					int tmp = distanceTweet(tweetliste.getText(), tweet);
-					// System.out.println(ligne);
-				}
-				br.close();
-			} catch (Exception e) {
-				System.out.println(e.toString());
+		InputStream ips = new FileInputStream(fichier);
+		InputStreamReader ipsr = new InputStreamReader(ips);
+		@SuppressWarnings("resource")
+		BufferedReader br = new BufferedReader(ipsr);
+		String read;
+		String newTweet = null;
+		int classe;
+
+		for (int i = 0; i < k; i++) {
+			if ((read = br.readLine()) != null) {
+				// On récupère les informations du tweet
+				String[] ligne = read.split(";");
+				newTweet = ligne[2];
+				classe = Integer.parseInt(ligne[5]);
+				// On associe le tweet lu avec sa distance avec le tweet de
+				// référence
+				distanceVoisins.put(newTweet, distanceTweet(newTweet, t));
+				voisins.put(newTweet, classe);
 			}
 		}
 
-		return k;
+		while ((read = br.readLine()) != null) {
+			String[] ligne = read.split(";");
+			newTweet = ligne[2];
+			classe = Integer.parseInt(ligne[5]);
+
+			// On ajoute ce tweet à la place d'un des voisins si nécéssaire
+			int newDistance = distanceTweet(newTweet, t);
+			String key = compareDistancesVoisins(distanceTweet(newTweet, t),
+					distanceVoisins);
+			// Si il y a un ancien voisin dont la distance est supérieur, on
+			// remplace
+			if (key != null) {
+				voisins.remove(key);
+				voisins.put(newTweet, classe);
+				distanceVoisins.remove(key);
+				distanceVoisins.put(newTweet, newDistance);
+			}
+
+		}
+		br.close();
+		return vote(voisins);
+	}
+
+	/**
+	 * Compare la distance d'un nouveau tweet avec le tweet de référence avec
+	 * celles de tout les voisins les plus proches
+	 * 
+	 * @param distanceTweet
+	 *            la distance du nouveau tweet
+	 * @param distanceVoisins
+	 *            Map contenant les couples tweets/distances des k tweets les
+	 *            plus proches du tweet de reference
+	 * @return null si le nouveau tweet à une distance plus élevée que les
+	 *         autres, le voisin à remplacer sinon
+	 */
+	private String compareDistancesVoisins(int distanceTweet,
+			Map<String, Integer> distanceVoisins) {
+		int max = 0;
+		String plusEloigne = null;
+
+		for (Entry<String, Integer> entry : distanceVoisins.entrySet()) {
+			String key = entry.getKey();
+			int distance = entry.getValue();
+			if (max < distance) {
+				max = distance;
+				plusEloigne = key;
+			}
+		}
+
+		if (max > distanceTweet) {
+			return plusEloigne;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Retourner la classe à associer au tweet à classer
+	 * 
+	 * @param voisins
+	 *            map contenant le tweet et la classe des k plus proches voisins
+	 *            du tweet à classer
+	 * @return la classe à associer au tweet à classer
+	 */
+	public int vote(Map<String, Integer> voisins) {
+		int classe0, classe2, classe4, max;
+		classe0 = classe2 = classe4 = 0;
+
+		// On calcule la nombre d'apparition de chaque classe
+		for (Entry<String, Integer> entry : voisins.entrySet()) {
+			switch (entry.getValue()) {
+			case 0:
+				classe0++;
+				break;
+			case 2:
+				classe2++;
+
+				break;
+			case 4:
+				classe4++;
+				break;
+			}
+		}
+
+		// On renvois la classe qui à la valeur la plus élevée
+		max = Math.max(classe0, Math.max(classe2, classe4));
+		if (max == classe0)
+			return 0;
+		else if (max == classe2) {
+			return 2;
+		} else {
+			return 4;
+		}
 	}
 
 	public static void main(String[] args) throws IOException {
