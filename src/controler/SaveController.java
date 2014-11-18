@@ -3,6 +3,8 @@ package controler;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JButton;
+
 import model.Model;
 
 public class SaveController implements ActionListener {
@@ -14,8 +16,18 @@ public class SaveController implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		model.save(model.listTweets);
+		JButton button = (JButton) e.getSource();
+		String nom = button.getText();
+
+		if (nom.equals("Knn")) {
+			model.save(model.listTweets, 1);
+
+		} else if (nom.equals("Bayesienne")) {
+			model.save(model.listTweets, 2);
+
+		} else {
+			model.save(model.listTweets, 3);
+		}
 
 	}
-
 }

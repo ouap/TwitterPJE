@@ -7,3 +7,11 @@ tweets/negative.txt
 tweets/positive.txt
 
 twitter4j.properties
+
+negatifs.csv
+
+neutres.csv
+
+positifs.csv
+
+tweets/Search.csv

@@ -111,17 +111,32 @@ public class Model extends Observable {
 	 * @param tweets
 	 *            la liste des tweets de la recherche
 	 */
-	public void save(List<Status> tweets) {
+	public void save(List<Status> tweets, int algo) {
 		int i = 0;
 
 		try {
 			FileWriter writer = new FileWriter(
 					new java.io.File(".").getCanonicalPath()
-							+ "/tweets/tweets.csv", true);
+							+ "/tweets/Search.csv", true);
+
 			for (Status tweet : tweets) {
 				// Nettoyage du tweet + récupération de sa classe
 				String text = nettoyerTweet(tweet.getText());
-				int classe = knn(text, 3);
+				int classe = 0;
+
+				switch (algo) {
+				case 1:
+					classe = knn(text, 5);
+					break;
+				case 2:
+					classe = 2;
+					break;
+				case 3:
+					classe = getClassePosNeg(text);
+					break;
+				default:
+					break;
+				}
 
 				// Ecriture
 				writer.write(tweet.getId() + ";" + tweet.getUser().getName()
@@ -208,7 +223,7 @@ public class Model extends Observable {
 		String cleanTweet = Pattern.compile(" , | ,|, ").matcher(l10)
 				.replaceAll(" ");
 
-		return cleanTweet;
+		return cleanTweet.toLowerCase();
 	}
 
 	/**
@@ -373,6 +388,7 @@ public class Model extends Observable {
 	public int knn(String t, int k) throws IOException {
 		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
 		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
+
 		String fichier = new java.io.File(".").getCanonicalPath()
 				+ "/tweets/tweets.csv";
 		InputStream ips = new FileInputStream(fichier);
@@ -399,6 +415,7 @@ public class Model extends Observable {
 		while ((read = br.readLine()) != null) {
 			String[] ligne = read.split(";");
 			newTweet = ligne[2];
+			System.out.println(newTweet);
 			classe = Integer.parseInt(ligne[5]);
 
 			// On ajoute ce tweet à la place d'un des voisins si nécéssaire

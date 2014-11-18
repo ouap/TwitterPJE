@@ -104,9 +104,17 @@ public class View extends JFrame implements Observer {
 		tweetContent.setBounds(67, 71, 358, 96);
 		panel.add(tweetContent);
 
-		JButton saveButton = new JButton("Enregistrer tweets");
-		saveButton.setBounds(164, 285, 148, 29);
-		panel.add(saveButton);
+		JButton btnKnn = new JButton("Knn");
+		btnKnn.setBounds(151, 285, 117, 29);
+		panel.add(btnKnn);
+
+		JButton btnBayesienne = new JButton("Bayesienne");
+		btnBayesienne.setBounds(280, 285, 117, 29);
+		panel.add(btnBayesienne);
+
+		JButton btnMotsPosneg = new JButton("Pos/Neg");
+		btnMotsPosneg.setBounds(22, 285, 117, 29);
+		panel.add(btnMotsPosneg);
 
 		comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(
@@ -143,7 +151,9 @@ public class View extends JFrame implements Observer {
 				comboBox);
 		list.addListSelectionListener(listControl);
 		searchField.addActionListener(searchControl);
-		saveButton.addActionListener(saveControl);
+		btnKnn.addActionListener(saveControl);
+		btnMotsPosneg.addActionListener(saveControl);
+		btnBayesienne.addActionListener(saveControl);
 		comboBox.addItemListener(comboListener);
 		setVisible(true);
 	}
