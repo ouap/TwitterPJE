@@ -16,6 +16,7 @@ import java.util.Observable;
 import java.util.regex.Pattern;
 
 import twitter4j.Query;
+import twitter4j.Query.ResultType;
 import twitter4j.QueryResult;
 import twitter4j.RateLimitStatus;
 import twitter4j.Status;
@@ -30,7 +31,7 @@ import view.View;
  */
 public class Model extends Observable {
 	public List<Status> listTweets;
-	public String[] noteTweets = new String[15];
+	public String[] noteTweets = new String[100];
 	public String rateLimit;
 	public String recherche;
 
@@ -39,6 +40,8 @@ public class Model extends Observable {
 			throw new IllegalArgumentException();
 		return listTweets;
 	}
+
+	/* FONCTIONS D'APPEL A L'API */
 
 	/**
 	 * Retourne la limite d'appel à l'API Twitter restante
@@ -55,7 +58,6 @@ public class Model extends Observable {
 		remaining = Integer.toString(status.getRemaining());
 
 		return "Limite : " + remaining + "/" + limit;
-
 	}
 
 	/**
@@ -69,7 +71,11 @@ public class Model extends Observable {
 		Twitter twitter = new TwitterFactory().getInstance();
 		try {
 			Query query = new Query(keyWord);
+			query.resultType(ResultType.mixed);
+			query.setLang("fr");
+			query.count(50);
 			QueryResult result = twitter.search(query);
+
 			listTweets = result.getTweets();
 			setChanged();
 			notifyObservers();
@@ -104,6 +110,7 @@ public class Model extends Observable {
 
 	}
 
+	/* FONCTIONS POUR LA SAUVEGARDE */
 	/**
 	 * Methode qui sauvegarde les tweets recherchés dans un csv aprés les avoir
 	 * néttoyé et classés
@@ -117,32 +124,36 @@ public class Model extends Observable {
 		try {
 			FileWriter writer = new FileWriter(
 					new java.io.File(".").getCanonicalPath()
-							+ "/tweets/Search.csv", true);
+							+ "/tweets/search.csv", true);
 
 			for (Status tweet : tweets) {
-				// Nettoyage du tweet + récupération de sa classe
-				String text = nettoyerTweet(tweet.getText());
-				int classe = 0;
+				if (!alreadyIn(tweet.getId())) {
 
-				switch (algo) {
-				case 1:
-					classe = knn(text, 5);
-					break;
-				case 2:
-					classe = 2;
-					break;
-				case 3:
-					classe = getClassePosNeg(text);
-					break;
-				default:
-					break;
+					// Nettoyage du tweet + récupération de sa classe
+					String text = nettoyerTweet(tweet.getText());
+					int classe = 0;
+
+					switch (algo) {
+					case 1:
+						classe = knn(text, 5);
+						break;
+					case 2:
+						classe = 2;
+						break;
+					case 3:
+						classe = getClassePosNeg(text);
+						System.out.println(classe);
+						break;
+					}
+
+					// Ecriture
+					writer.write(tweet.getId() + ";"
+							+ tweet.getUser().getName() + ";" + text + ";"
+							+ tweet.getCreatedAt() + ";" + recherche + ";"
+							+ classe + "\n");
 				}
-
-				// Ecriture
-				writer.write(tweet.getId() + ";" + tweet.getUser().getName()
-						+ ";" + text + ";" + tweet.getCreatedAt() + ";"
-						+ recherche + ";" + classe + "\n");
 			}
+
 			writer.close();
 
 		} catch (IOException e) { // TODO Auto-generated catch block
@@ -162,7 +173,7 @@ public class Model extends Observable {
 	public boolean alreadyIn(long id) {
 		try {
 			String chemin = new java.io.File(".").getCanonicalPath()
-					+ "/tweets/tweets.csv";
+					+ "/tweets/base.csv";
 			@SuppressWarnings("resource")
 			BufferedReader fichier_source = new BufferedReader(new FileReader(
 					chemin));
@@ -226,6 +237,7 @@ public class Model extends Observable {
 		return cleanTweet.toLowerCase();
 	}
 
+	/* CLASSIFICATION PAR RAPPORT AUX FICHIER .TXT (MOTS POSITIFS/NEGATIFS) */
 	/**
 	 * Retourne la classe d'un tweet en fonction du nb de mot positif/négatif
 	 * 
@@ -322,6 +334,7 @@ public class Model extends Observable {
 			while ((ligne = br.readLine()) != null) {
 				mots = ligne.split(", ");
 				for (String mot6 : mots) {
+					System.out.println(mot6);
 					String mot = mot6.concat(" ");
 
 					/*
@@ -346,6 +359,8 @@ public class Model extends Observable {
 		}
 		return negatif;
 	}
+
+	/* FONCTIONS POUR KNN */
 
 	/**
 	 * Retourne la distance entre deux tweets
@@ -373,67 +388,6 @@ public class Model extends Observable {
 
 		// System.out.println(nbMotsCommuns);
 		return ((nbTotal - nbMotsCommuns) / nbTotal);
-	}
-
-	/**
-	 * Classe un tweet à l'aide de la méthode de classification knn
-	 * 
-	 * @param t
-	 *            le tweet à classer
-	 * @param k
-	 *            le nombre de voisins à prendre en compte
-	 * @return la classe associée au tweet
-	 * @throws IOException
-	 */
-	public int knn(String t, int k) throws IOException {
-		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
-		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
-
-		String fichier = new java.io.File(".").getCanonicalPath()
-				+ "/tweets/tweets.csv";
-		InputStream ips = new FileInputStream(fichier);
-		InputStreamReader ipsr = new InputStreamReader(ips);
-		@SuppressWarnings("resource")
-		BufferedReader br = new BufferedReader(ipsr);
-		String read;
-		String newTweet = null;
-		int classe;
-
-		for (int i = 0; i < k; i++) {
-			if ((read = br.readLine()) != null) {
-				// On récupère les informations du tweet
-				String[] ligne = read.split(";");
-				newTweet = ligne[2];
-				classe = Integer.parseInt(ligne[5]);
-				// On associe le tweet lu avec sa distance avec le tweet de
-				// référence
-				distanceVoisins.put(newTweet, distanceTweet(newTweet, t));
-				voisins.put(newTweet, classe);
-			}
-		}
-
-		while ((read = br.readLine()) != null) {
-			String[] ligne = read.split(";");
-			newTweet = ligne[2];
-			System.out.println(newTweet);
-			classe = Integer.parseInt(ligne[5]);
-
-			// On ajoute ce tweet à la place d'un des voisins si nécéssaire
-			int newDistance = distanceTweet(newTweet, t);
-			String key = compareDistancesVoisins(distanceTweet(newTweet, t),
-					distanceVoisins);
-			// Si il y a un ancien voisin dont la distance est supérieur, on
-			// remplace
-			if (key != null) {
-				voisins.remove(key);
-				voisins.put(newTweet, classe);
-				distanceVoisins.remove(key);
-				distanceVoisins.put(newTweet, newDistance);
-			}
-
-		}
-		br.close();
-		return vote(voisins);
 	}
 
 	/**
@@ -506,6 +460,67 @@ public class Model extends Observable {
 		} else {
 			return 4;
 		}
+	}
+
+	/**
+	 * Classe un tweet à l'aide de la méthode de classification knn
+	 * 
+	 * @param t
+	 *            le tweet à classer
+	 * @param k
+	 *            le nombre de voisins à prendre en compte
+	 * @return la classe associée au tweet
+	 * @throws IOException
+	 */
+	public int knn(String t, int k) throws IOException {
+		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
+		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
+
+		String fichier = new java.io.File(".").getCanonicalPath()
+				+ "/tweets/base.csv";
+		InputStream ips = new FileInputStream(fichier);
+		InputStreamReader ipsr = new InputStreamReader(ips);
+		@SuppressWarnings("resource")
+		BufferedReader br = new BufferedReader(ipsr);
+		String read;
+		String newTweet = null;
+		int classe;
+
+		for (int i = 0; i < k; i++) {
+			if ((read = br.readLine()) != null) {
+				// On récupère les informations du tweet
+				String[] ligne = read.split(";");
+				newTweet = ligne[2];
+				classe = Integer.parseInt(ligne[5]);
+				// On associe le tweet lu avec sa distance avec le tweet de
+				// référence
+				distanceVoisins.put(newTweet, distanceTweet(newTweet, t));
+				voisins.put(newTweet, classe);
+			}
+		}
+
+		while ((read = br.readLine()) != null) {
+			String[] ligne = read.split(";");
+			newTweet = ligne[2];
+			System.out.println(newTweet);
+			classe = Integer.parseInt(ligne[5]);
+
+			// On ajoute ce tweet à la place d'un des voisins si nécéssaire
+			int newDistance = distanceTweet(newTweet, t);
+			String key = compareDistancesVoisins(distanceTweet(newTweet, t),
+					distanceVoisins);
+			// Si il y a un ancien voisin dont la distance est supérieur, on
+			// remplace
+			if (key != null) {
+				voisins.remove(key);
+				voisins.put(newTweet, classe);
+				distanceVoisins.remove(key);
+				distanceVoisins.put(newTweet, newDistance);
+			}
+
+		}
+		br.close();
+		return vote(voisins);
 	}
 
 	public static void main(String[] args) throws IOException {
