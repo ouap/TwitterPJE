@@ -16,7 +16,7 @@ public class ValidationCroisee {
 
 	/**
 	 * Initialisation de la liste des sous-ensemble et de la map référence
-	 * 
+	 *
 	 * @param k
 	 *            le nombre de sous-ensembles
 	 */
@@ -30,7 +30,7 @@ public class ValidationCroisee {
 
 	/**
 	 * Création des sous-ensembles à partir de la base d'apprentissage
-	 * 
+	 *
 	 * @param k
 	 *            le nombre de sous ensemble
 	 * @throws IOException
@@ -42,7 +42,7 @@ public class ValidationCroisee {
 		initArray(k);
 
 		String fichier = new java.io.File(".").getCanonicalPath()
-				+ "/tweets/search.csv";
+				+ "/tweets/base.csv";
 		InputStream ips = new FileInputStream(fichier);
 		InputStreamReader ipsr = new InputStreamReader(ips);
 		@SuppressWarnings("resource")
@@ -79,28 +79,31 @@ public class ValidationCroisee {
 			}
 
 		}
+		for (List<String> sous : sousEnsembles) {
+			System.out.println("Taille " + sous.size());
+		}
 
 	}
 
-	int calculerTxErreur(int algo) {
-
-		switch (algo) {
-		case 1:
-
-			break;
-
-		case 2:
-
-			break;
-		case 3:
-
-			break;
+	int calculerTxErreur(int k) {
+		try {
+			creerSousEnsembles(k);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+		for (int i = 0; i < k; i++) {
+			for (int j = 0; j < sousEnsembles.get(i).size(); j++) {
+
+			}
+
+		}
+
 		return 0;
 
 	}
 
 	public static void main(String[] args) throws IOException {
-		new ValidationCroisee().creerSousEnsembles(10);
+		new ValidationCroisee().calculerTxErreur(10);
 	}
 }
