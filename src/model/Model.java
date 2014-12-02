@@ -34,14 +34,27 @@ public class Model extends Observable {
 	private List<TweetInfos> listTweets;
 	private List<TweetInfos> base;
 	private List<Integer> noteTweets;
+
+	public enum Classe {
+		POSITIF, NEGATIF, NEUTRE
+	};
+
+	static List<TweetInfos> LIST_TWEET_POS;
+	static List<TweetInfos> LIST_TWEET_NEG;
+	static List<TweetInfos> LIST_TWEET_NEUTRE;
+
 	public String rateLimit;
 	public String recherche;
 
 	/**
 	 * @return la liste de tweet de la derniere recherche effectuée
 	 */
-	public List<TweetInfos> getListTweetsSearch() {
+	public List<TweetInfos> getListTweets() {
 		return listTweets;
+	}
+
+	public void setListTweets(List<TweetInfos> listTweets) {
+		this.listTweets = listTweets;
 	}
 
 	/**
@@ -58,11 +71,25 @@ public class Model extends Observable {
 		return noteTweets;
 	}
 
+	public List<TweetInfos> getTweetByClasse(Classe classe) {
+		switch (classe) {
+		case POSITIF:
+			return LIST_TWEET_POS;
+
+		case NEGATIF:
+			return LIST_TWEET_NEG;
+
+		case NEUTRE:
+			return LIST_TWEET_NEUTRE;
+		}
+		return null;
+	}
+
 	/* FONCTIONS D'APPEL A L'API */
 
 	/**
 	 * Retourne la limite d'appel à l'API Twitter restante
-	 * 
+	 *
 	 * @return La limite d'appel restante
 	 * @throws TwitterException
 	 */
@@ -79,7 +106,7 @@ public class Model extends Observable {
 
 	/**
 	 * Méthode qui réalise une recherche de tweet à l'aide de l'API
-	 * 
+	 *
 	 * @param keyWord
 	 *            le mot clé de la recherche à effectuer
 	 */
@@ -113,13 +140,18 @@ public class Model extends Observable {
 
 	/**
 	 * Permet de charger les tweets de la base d'apprentissage dans les deux
-	 * listes base et ListTweet (affichage)
-	 * 
+	 * listes base et ListTweet (affichage), et charge les tweets dans 3 autres
+	 * listes en fonction de leur classe
+	 *
 	 */
 	public void chargerBaseTweet() {
 		base = new ArrayList<TweetInfos>();
 		listTweets = new ArrayList<TweetInfos>();
 		noteTweets = new ArrayList<Integer>();
+		LIST_TWEET_NEG = new ArrayList<TweetInfos>();
+		LIST_TWEET_NEUTRE = new ArrayList<TweetInfos>();
+		LIST_TWEET_POS = new ArrayList<TweetInfos>();
+
 		try {
 			String fichier = new java.io.File(".").getCanonicalPath()
 					+ "/tweets/base.csv";
@@ -130,15 +162,28 @@ public class Model extends Observable {
 			String read;
 			while ((read = br.readLine()) != null) {
 				String[] ligne = read.split(";");
+				// Création du tweet
+				TweetInfos tweet = new TweetInfos(Long.parseLong(ligne[0]),
+						ligne[1], ligne[2], ligne[3], ligne[4],
+						Integer.parseInt(ligne[5]));
 				// Ajout à la liste base d'apprentissage
-				base.add(new TweetInfos(Long.parseLong(ligne[0]), ligne[1],
-						ligne[2], ligne[3], ligne[4], Integer
-								.parseInt(ligne[5])));
+				base.add(tweet);
 				// Ajout à la list de tweets pour l'affichage
-				listTweets.add(new TweetInfos(Long.parseLong(ligne[0]),
-						ligne[1], ligne[2], ligne[3], ligne[4], Integer
-								.parseInt(ligne[5])));
-				noteTweets.add(Integer.parseInt(ligne[5]));
+				listTweets.add(tweet);
+
+				switch (tweet.getNote()) {
+				case 0:
+					LIST_TWEET_NEG.add(tweet);
+					break;
+
+				case 2:
+					LIST_TWEET_NEUTRE.add(tweet);
+					break;
+
+				case 4:
+					LIST_TWEET_POS.add(tweet);
+					break;
+				}
 
 			}
 			br.close();
@@ -155,7 +200,7 @@ public class Model extends Observable {
 	/**
 	 * Methode qui sauvegarde les tweets recherchés dans un csv aprés les avoir
 	 * néttoyé et classés
-	 * 
+	 *
 	 * @param listTweet
 	 *            la liste des tweets de la recherche
 	 * @param algo
@@ -205,7 +250,7 @@ public class Model extends Observable {
 	/**
 	 * Méthode qui test si un tweet fait déjà parti d'un fichier csv à l'aide de
 	 * son id
-	 * 
+	 *
 	 * @param id
 	 *            L'id du tweet à tester
 	 * @return vrai si le tweet est déjà dans le fichier csv, faux sinon
@@ -280,7 +325,7 @@ public class Model extends Observable {
 	/* CLASSIFICATION PAR RAPPORT AUX FICHIER .TXT (MOTS POSITIFS/NEGATIFS) */
 	/**
 	 * Retourne la classe d'un tweet en fonction du nb de mot positif/négatif
-	 * 
+	 *
 	 * @param tweet
 	 *            Le tweet à classer
 	 * @return la classe du tweet
@@ -304,10 +349,10 @@ public class Model extends Observable {
 
 	/**
 	 * Calcule le nombre de mots positifs d'un tweet
-	 * 
+	 *
 	 * @param tweet
 	 *            le tweet à tester
-	 * 
+	 *
 	 * @return le nombre de mots positifs du tweet
 	 */
 	public static int motsPositifs(String tweet) {
@@ -354,7 +399,7 @@ public class Model extends Observable {
 
 	/**
 	 * Calcule le nombre de mots négatifs d'un tweet
-	 * 
+	 *
 	 * @param tweet
 	 *            le tweet à tester
 	 * @return le nombre de mots négatifs de ce tweet
@@ -404,7 +449,7 @@ public class Model extends Observable {
 
 	/**
 	 * Retourne la distance entre deux tweets
-	 * 
+	 *
 	 * @param t1
 	 *            le tweet 1
 	 * @param t2
@@ -433,7 +478,7 @@ public class Model extends Observable {
 	/**
 	 * Compare la distance d'un nouveau tweet avec le tweet de référence avec
 	 * celles de tout les voisins les plus proches
-	 * 
+	 *
 	 * @param distanceTweet
 	 *            la distance du nouveau tweet
 	 * @param distanceVoisins
@@ -465,7 +510,7 @@ public class Model extends Observable {
 
 	/**
 	 * Retourner la classe à associer au tweet à classer
-	 * 
+	 *
 	 * @param voisins
 	 *            map contenant le tweet et la classe des k plus proches voisins
 	 *            du tweet à classer
@@ -504,7 +549,7 @@ public class Model extends Observable {
 
 	/**
 	 * Classe un tweet à l'aide de la méthode de classification knn
-	 * 
+	 *
 	 * @param t
 	 *            le tweet à classer
 	 * @param k
