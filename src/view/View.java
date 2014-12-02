@@ -2,6 +2,8 @@ package view;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -118,6 +120,10 @@ public class View extends JFrame implements Observer {
 		btnMotsPosneg.setBounds(22, 285, 117, 29);
 		panel.add(btnMotsPosneg);
 
+		JButton btnChargerBase = new JButton("Charger Base");
+		btnChargerBase.setBounds(6, 7, 117, 29);
+		contentPane.add(btnChargerBase);
+
 		comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(
 				new String[] { "0", "2", "4" }));
@@ -158,6 +164,14 @@ public class View extends JFrame implements Observer {
 				comboBox);
 		list.addListSelectionListener(listControl);
 		searchField.addActionListener(searchControl);
+		btnChargerBase.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				model.setListTweets(model.getBase());
+				update(model, new Object());
+			}
+		});
 		btnKnn.addActionListener(saveControl);
 		btnMotsPosneg.addActionListener(saveControl);
 		btnBayesienne.addActionListener(saveControl);
@@ -167,10 +181,10 @@ public class View extends JFrame implements Observer {
 
 	@Override
 	public void update(Observable o, Object arg) {
-		List<TweetInfos> listTweet = model.getListTweetsSearch();
+		List<TweetInfos> listTweet = model.getListTweets();
 		DefaultListModel<String> modelTmp = (DefaultListModel<String>) list
 				.getModel();
-		modelTmp.removeAllElements();
+		modelTmp.clear();
 
 		for (TweetInfos tweet : listTweet) {
 			modelTmp.addElement("" + tweet.getId());
