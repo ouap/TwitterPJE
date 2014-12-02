@@ -20,13 +20,13 @@ public class SaveController implements ActionListener {
 		String nom = button.getText();
 
 		if (nom.equals("Knn")) {
-			model.save(model.listTweets, 1);
+			model.save(model.getListTweetsSearch(), 1);
 
 		} else if (nom.equals("Bayesienne")) {
-			model.save(model.listTweets, 2);
+			model.save(model.getListTweetsSearch(), 2);
 
 		} else {
-			model.save(model.listTweets, 3);
+			model.save(model.getListTweetsSearch(), 3);
 		}
 
 	}

@@ -23,8 +23,11 @@ public class ComboboxListener implements ItemListener {
 	public void itemStateChanged(ItemEvent e) {
 		if (e.getStateChange() == ItemEvent.SELECTED) {
 			@SuppressWarnings("unchecked")
-			String item = ((String) e.getItem());
-			model.noteTweets[listTweets.getSelectedIndex()] = item;
+			int item = Integer.parseInt(((String) e.getItem()));
+
+			model.noteTweets.remove(listTweets.getSelectedIndex());
+			model.noteTweets.add(listTweets.getSelectedIndex(), item);
+
 		}
 	}
 }

@@ -2,6 +2,7 @@ package view;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -22,7 +23,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
 import model.Model;
-import twitter4j.Status;
+import model.TweetInfos;
 import twitter4j.TwitterException;
 import controler.ComboboxListener;
 import controler.ListController;
@@ -55,6 +56,7 @@ public class View extends JFrame implements Observer {
 		// Model
 		model = m;
 		model.addObserver(this);
+		model.chargerBaseTweet();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 600, 400);
@@ -133,6 +135,11 @@ public class View extends JFrame implements Observer {
 
 		// Model List
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
+		List<TweetInfos> baseTweet = model.getBase();
+		if (!baseTweet.isEmpty()) {
+			for (TweetInfos tweet : baseTweet)
+				listModel.addElement("" + tweet.getId());
+		}
 
 		list = new JList<String>(listModel);
 		JScrollPane scroll = new JScrollPane();
@@ -160,12 +167,12 @@ public class View extends JFrame implements Observer {
 
 	@Override
 	public void update(Observable o, Object arg) {
-
+		List<TweetInfos> listTweet = model.getListTweetsSearch();
 		DefaultListModel<String> modelTmp = (DefaultListModel<String>) list
 				.getModel();
 		modelTmp.removeAllElements();
 
-		for (Status tweet : model.getTweets()) {
+		for (TweetInfos tweet : listTweet) {
 			modelTmp.addElement("" + tweet.getId());
 		}
 

@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,15 +31,31 @@ import view.View;
  * @since Twitter4J 2.1.7
  */
 public class Model extends Observable {
-	public List<Status> listTweets;
-	public String[] noteTweets = new String[100];
+	private List<TweetInfos> listTweets;
+	private List<TweetInfos> base;
+	private List<Integer> noteTweets;
 	public String rateLimit;
 	public String recherche;
 
-	public List<Status> getTweets() throws IllegalArgumentException {
-		if (listTweets == null)
-			throw new IllegalArgumentException();
+	/**
+	 * @return la liste de tweet de la derniere recherche effectuée
+	 */
+	public List<TweetInfos> getListTweetsSearch() {
 		return listTweets;
+	}
+
+	/**
+	 * @return la liste de tweets de la base d'apprentissage
+	 */
+	public List<TweetInfos> getBase() {
+		return base;
+	}
+
+	/**
+	 * @return la liste des notes des tweets
+	 */
+	public List<Integer> getNoteTweets() {
+		return noteTweets;
 	}
 
 	/* FONCTIONS D'APPEL A L'API */
@@ -65,10 +82,11 @@ public class Model extends Observable {
 	 * 
 	 * @param keyWord
 	 *            le mot clé de la recherche à effectuer
-	 * @return la liste de Status correspondant à la recherche
 	 */
-	public List<Status> doSearch(String keyWord) {
+	public void doSearch(String keyWord) {
 		Twitter twitter = new TwitterFactory().getInstance();
+		List<Status> listStatus;
+		listTweets = new ArrayList<TweetInfos>();
 		try {
 			Query query = new Query(keyWord);
 			query.resultType(ResultType.mixed);
@@ -76,38 +94,61 @@ public class Model extends Observable {
 			query.count(50);
 			QueryResult result = twitter.search(query);
 
-			listTweets = result.getTweets();
+			listStatus = result.getTweets();
+
+			for (Status status : listStatus) {
+				listTweets.add(new TweetInfos(status.getId(), status.getUser()
+						.getName(), status.getText(), status.getCreatedAt()
+						.toString(), keyWord, -1));
+			}
 			setChanged();
 			notifyObservers();
-			return listTweets;
+
 		} catch (TwitterException te) {
 			te.printStackTrace();
 			System.out.println("Failed to search tweets: " + te.getMessage());
 			System.exit(-1);
 		}
-		return null;
 	}
 
 	/**
-	 * Permet de charger les tweets du fichier csv
+	 * Permet de charger les tweets de la base d'apprentissage dans les deux
+	 * listes base et ListTweet (affichage)
 	 * 
-	 * @param fichier
-	 *            le nom du fichier csv à charger
 	 */
-	public static void chargerTweet(String fichier) {
+	public void chargerBaseTweet() {
+		base = new ArrayList<TweetInfos>();
+		listTweets = new ArrayList<TweetInfos>();
+		noteTweets = new ArrayList<Integer>();
 		try {
+			String fichier = new java.io.File(".").getCanonicalPath()
+					+ "/tweets/base.csv";
 			InputStream ips = new FileInputStream(fichier);
 			InputStreamReader ipsr = new InputStreamReader(ips);
+			@SuppressWarnings("resource")
 			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			while ((ligne = br.readLine()) != null) {
-				System.out.println(ligne);
+			String read;
+			while ((read = br.readLine()) != null) {
+				String[] ligne = read.split(";");
+				// Ajout à la liste base d'apprentissage
+				base.add(new TweetInfos(Long.parseLong(ligne[0]), ligne[1],
+						ligne[2], ligne[3], ligne[4], Integer
+								.parseInt(ligne[5])));
+				// Ajout à la list de tweets pour l'affichage
+				listTweets.add(new TweetInfos(Long.parseLong(ligne[0]),
+						ligne[1], ligne[2], ligne[3], ligne[4], Integer
+								.parseInt(ligne[5])));
+				noteTweets.add(Integer.parseInt(ligne[5]));
+
 			}
 			br.close();
 		} catch (Exception e) {
 			System.out.println(e.toString());
 		}
 
+		for (int i = 0; i < 10; i++) {
+			System.out.println(base.get(i).getId());
+		}
 	}
 
 	/* FONCTIONS POUR LA SAUVEGARDE */
@@ -115,10 +156,12 @@ public class Model extends Observable {
 	 * Methode qui sauvegarde les tweets recherchés dans un csv aprés les avoir
 	 * néttoyé et classés
 	 * 
-	 * @param tweets
+	 * @param listTweet
 	 *            la liste des tweets de la recherche
+	 * @param algo
+	 *            l'algo à utiliser pour la classification
 	 */
-	public void save(List<Status> tweets, int algo) {
+	public void save(List<TweetInfos> listTweets, int algo) {
 		int i = 0;
 
 		try {
@@ -126,31 +169,28 @@ public class Model extends Observable {
 					new java.io.File(".").getCanonicalPath()
 							+ "/tweets/search.csv", true);
 
-			for (Status tweet : tweets) {
+			for (TweetInfos tweet : listTweets) {
 				if (!alreadyIn(tweet.getId())) {
-
 					// Nettoyage du tweet + récupération de sa classe
-					String text = nettoyerTweet(tweet.getText());
+					String text = nettoyerTweet(tweet.getTweet());
 					int classe = 0;
 
 					switch (algo) {
 					case 1:
-						classe = knn(text, 5);
+						classe = knn(text, 5, "base");
 						break;
 					case 2:
 						classe = 2;
 						break;
 					case 3:
 						classe = getClassePosNeg(text);
-						System.out.println(classe);
 						break;
 					}
 
 					// Ecriture
-					writer.write(tweet.getId() + ";"
-							+ tweet.getUser().getName() + ";" + text + ";"
-							+ tweet.getCreatedAt() + ";" + recherche + ";"
-							+ classe + "\n");
+					writer.write(tweet.getId() + ";" + tweet.getUser() + ";"
+							+ text + ";" + tweet.getDate() + ";"
+							+ tweet.getSearch() + ";" + classe + "\n");
 				}
 			}
 
@@ -245,7 +285,7 @@ public class Model extends Observable {
 	 *            Le tweet à classer
 	 * @return la classe du tweet
 	 */
-	int getClassePosNeg(String tweet) {
+	public static int getClassePosNeg(String tweet) {
 		/* Annotation */
 		int positif = motsPositifs(tweet);
 		int negatif = motsNegatifs(tweet);
@@ -402,7 +442,7 @@ public class Model extends Observable {
 	 * @return null si le nouveau tweet à une distance plus élevée que les
 	 *         autres, le voisin à remplacer sinon
 	 */
-	private String compareDistancesVoisins(int distanceTweet,
+	private static String compareDistancesVoisins(int distanceTweet,
 			Map<String, Integer> distanceVoisins) {
 		int max = 0;
 		String plusEloigne = null;
@@ -431,7 +471,7 @@ public class Model extends Observable {
 	 *            du tweet à classer
 	 * @return la classe à associer au tweet à classer
 	 */
-	public int vote(Map<String, Integer> voisins) {
+	public static int vote(Map<String, Integer> voisins) {
 		int classe0, classe2, classe4, max;
 		classe0 = classe2 = classe4 = 0;
 
@@ -472,12 +512,12 @@ public class Model extends Observable {
 	 * @return la classe associée au tweet
 	 * @throws IOException
 	 */
-	public int knn(String t, int k) throws IOException {
+	public static int knn(String t, int k, String filename) throws IOException {
 		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
 		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
 
-		String fichier = new java.io.File(".").getCanonicalPath()
-				+ "/tweets/base.csv";
+		String fichier = new java.io.File(".").getCanonicalPath() + "/tweets/"
+				+ filename + ".csv";
 		InputStream ips = new FileInputStream(fichier);
 		InputStreamReader ipsr = new InputStreamReader(ips);
 		@SuppressWarnings("resource")

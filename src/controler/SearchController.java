@@ -19,7 +19,10 @@ public class SearchController implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String keyWord = ((JTextField) e.getSource()).getText();
 		model.recherche = keyWord;
-		model.listTweets = model.doSearch(keyWord);
+
+		if (!keyWord.equals("")) {
+			model.doSearch(keyWord);
+		}
 
 		try {
 			model.rateLimit = model.getLimit();
