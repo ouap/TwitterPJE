@@ -10,8 +10,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import model.Model;
+import model.TweetInfos;
+
 public class ValidationCroisee {
-	List<List<String>> sousEnsembles;
+	List<List<TweetInfos>> sousEnsembles;
 	Map<String, Integer> reference;
 
 	/**
@@ -21,10 +24,10 @@ public class ValidationCroisee {
 	 *            le nombre de sous-ensembles
 	 */
 	void initArray(int k) {
-		sousEnsembles = new ArrayList<List<String>>(k);
+		sousEnsembles = new ArrayList<List<TweetInfos>>(k);
 		reference = new HashMap<String, Integer>();
 		for (int i = 0; i < k; i++) {
-			sousEnsembles.add(new ArrayList<String>());
+			sousEnsembles.add(new ArrayList<TweetInfos>());
 		}
 	}
 
@@ -52,40 +55,52 @@ public class ValidationCroisee {
 
 		while ((read = br.readLine()) != null) {
 			ligne = read.split(";");
-
+			TweetInfos tweet = new TweetInfos(Long.parseLong(ligne[0]),
+					ligne[1], ligne[2], ligne[3], ligne[4],
+					Integer.parseInt(ligne[5]));
 			switch (Integer.parseInt(ligne[5])) {
 			case 0:
 
 				if (neg >= k)
 					neg = 0;
 				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(neg).add(ligne[2]);
+				sousEnsembles.get(neg).add(tweet);
 				neg++;
 				break;
 			case 2:
 				if (neutre >= k)
 					neutre = 0;
 				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(neutre).add(ligne[2]);
+				sousEnsembles.get(neutre).add(tweet);
 				neutre++;
 				break;
 			case 4:
 				if (pos >= k)
 					pos = 0;
 				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(pos).add(ligne[2]);
+				sousEnsembles.get(pos).add(tweet);
 				pos++;
 				break;
 			}
 
 		}
-		for (List<String> sous : sousEnsembles) {
+		for (List<TweetInfos> sous : sousEnsembles) {
 			System.out.println("Taille " + sous.size());
 		}
 
 	}
 
+	/**
+	 * @param k
+	 * @return
+	 */
 	int calculerTxErreur(int k) {
+		List<TweetInfos> courrant;
+		List<TweetInfos> apprentissage;
+		int classeknn, classePosNeg, classeBayes;
+		int errKnn = 0;
+		int errBayes = 0;
+		int errPosNeg = 0;
 		try {
 			creerSousEnsembles(k);
 		} catch (IOException e) {
@@ -93,14 +108,52 @@ public class ValidationCroisee {
 		}
 
 		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < sousEnsembles.get(i).size(); j++) {
+			courrant = sousEnsembles.get(i);
+			apprentissage = concatLists(i);
+			for (TweetInfos string : courrant) {
+				try {
+					classeknn = Model.knn(string.getTweet(), 30, apprentissage);
+					classePosNeg = Model.getClassePosNeg(string.getTweet());
+					System.out.println("Knn : noteAttribuée -> " + classeknn
+							+ ", PosNeg : noteAttribuée -> " + classePosNeg
+							+ " note ref -> "
+							+ reference.get(string.getTweet()));
+
+					if (classeknn != reference.get(string.getTweet())) {
+						errKnn++;
+					} else {
+						System.out.println("OK knn ");
+					}
+					if (classePosNeg != reference.get(string.getTweet())) {
+						errPosNeg++;
+					} else {
+						System.out.println("OK Pos/Neg ");
+					}
+
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			}
-
 		}
-
+		System.out.println("nb erreurs KNN : " + errKnn
+				+ " nb erreurs POSNEG : " + errPosNeg);
 		return 0;
 
+	}
+
+	/**
+	 * @param i
+	 * @return
+	 */
+	private List<TweetInfos> concatLists(int i) {
+		List<TweetInfos> result = new ArrayList<TweetInfos>();
+		for (int j = 0; j < sousEnsembles.size(); j++) {
+			if (j != i)
+				result.addAll(sousEnsembles.get(j));
+		}
+		return result;
 	}
 
 	public static void main(String[] args) throws IOException {
