@@ -21,10 +21,18 @@ public class ListController implements ListSelectionListener {
 
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
-		List<TweetInfos> tweets = model.getListTweetsSearch();
+		List<TweetInfos> tweets = model.getListTweets();
 		int index = ((JList<?>) e.getSource()).getSelectedIndex();
 		vue.userContent.setText(tweets.get(index).getUser());
 		vue.tweetContent.setText(tweets.get(index).getTweet());
-		vue.comboBox.setSelectedItem(tweets.get(index).getNote());
+		/*
+		 * if (model.getNoteTweets().get(index).equals("0")) {
+		 * vue.comboBox.setSelectedItem("0");
+		 * 
+		 * } else if (model.getNoteTweets().get(index).equals("2")) {
+		 * vue.comboBox.setSelectedItem("2");
+		 * 
+		 * } else { vue.comboBox.setSelectedItem("0"); }
+		 */
 	}
 }

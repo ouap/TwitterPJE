@@ -25,8 +25,8 @@ public class ComboboxListener implements ItemListener {
 			@SuppressWarnings("unchecked")
 			int item = Integer.parseInt(((String) e.getItem()));
 
-			model.noteTweets.remove(listTweets.getSelectedIndex());
-			model.noteTweets.add(listTweets.getSelectedIndex(), item);
+			model.getNoteTweets().remove(listTweets.getSelectedIndex());
+			model.getNoteTweets().add(listTweets.getSelectedIndex(), item);
 
 		}
 	}
