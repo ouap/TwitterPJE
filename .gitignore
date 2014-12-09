@@ -13,3 +13,7 @@ gitSetProxy.sh
 gitUnsetProxy.sh
 
 *.csv
+
+tweets/negative.txt
+
+tweets/positive.txt
