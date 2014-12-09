@@ -6,7 +6,6 @@ tweets/negative.txt
 
 tweets/positive.txt
 
-twitter4j.properties
 
 negatifs.csv
 
@@ -21,3 +20,5 @@ gitSetProxy.sh
 gitUnsetProxy.sh
 
 *.csv
+
+twitter4j.properties

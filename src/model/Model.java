@@ -33,7 +33,6 @@ import view.View;
 public class Model extends Observable {
 	private List<TweetInfos> listTweets;
 	private List<TweetInfos> base;
-	private List<Integer> noteTweets;
 
 	public enum Classe {
 		POSITIF, NEGATIF, NEUTRE
@@ -62,13 +61,6 @@ public class Model extends Observable {
 	 */
 	public List<TweetInfos> getBase() {
 		return base;
-	}
-
-	/**
-	 * @return la liste des notes des tweets
-	 */
-	public List<Integer> getNoteTweets() {
-		return noteTweets;
 	}
 
 	public List<TweetInfos> getTweetByClasse(Classe classe) {
@@ -147,7 +139,6 @@ public class Model extends Observable {
 	public void chargerBaseTweet() {
 		base = new ArrayList<TweetInfos>();
 		listTweets = new ArrayList<TweetInfos>();
-		noteTweets = new ArrayList<Integer>();
 		LIST_TWEET_NEG = new ArrayList<TweetInfos>();
 		LIST_TWEET_NEUTRE = new ArrayList<TweetInfos>();
 		LIST_TWEET_POS = new ArrayList<TweetInfos>();
@@ -191,6 +182,32 @@ public class Model extends Observable {
 			System.out.println(e.toString());
 		}
 
+	}
+
+	public void noter(List<TweetInfos> listeTweets, int algo)
+			throws IOException {
+
+		for (TweetInfos tweet : listTweets) {
+			// Nettoyage du tweet + récupération de sa classe
+			String text = nettoyerTweet(tweet.getTweet());
+			int classe = 0;
+
+			switch (algo) {
+			case 1:
+				classe = getClassePosNeg(text);
+				break;
+			case 2:
+				classe = knn(text, 30, base);
+				break;
+			case 3:
+				/*
+				 * classe = new classifBayes().classifierBayes(fichier, tweet,
+				 * classif);
+				 */
+				break;
+			}
+			tweet.setNote(classe);
+		}
 	}
 
 	/* FONCTIONS POUR LA SAUVEGARDE */
@@ -593,6 +610,7 @@ public class Model extends Observable {
 			}
 
 		}
+
 		System.out.println("Note finale : " + vote(voisins));
 		return vote(voisins);
 	}
@@ -601,4 +619,5 @@ public class Model extends Observable {
 		new View(new Model());
 
 	}
+
 }
