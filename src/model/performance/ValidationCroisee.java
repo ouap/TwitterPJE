@@ -86,10 +86,15 @@ public class ValidationCroisee {
 
 		for (int i = 0; i < k; i++) {
 			List<TweetInfos> baseCalcul = concatEnsemble(i);
+			System.out.println("----------------------------------");
 			System.out.println("NOTATION SOUS-ENSEMBLE " + (i + 1));
 			for (TweetInfos tweetcourrant : sousEnsembles.get(i)) {
 				classeKnn = Model.knn(tweetcourrant.getTweet(), 30, baseCalcul);
 				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
+
+				System.out.println("Note KNN -> " + classeKnn
+						+ ", Note PosNeg -> " + classePosNeg + " Note ref : "
+						+ reference.get(tweetcourrant));
 
 				if (classeKnn != reference.get(tweetcourrant)) {
 					errKnn++;
@@ -102,15 +107,13 @@ public class ValidationCroisee {
 				} else {
 					System.out.println("	Pos/Neg OK");
 				}
-				System.out.println("Note KNN -> " + classeKnn
-						+ ", Note PosNeg -> " + classePosNeg + " Note ref : "
-						+ reference.get(tweetcourrant));
 
 			}
 		}
 
-		System.out.println("Nb erreurs knn : " + errKnn
-				+ "\nNb erreurs Pos/Neg : " + errPosNeg);
+		System.out.println("Nb erreurs knn : " + errKnn + "/"
+				+ reference.size() + "\nNb erreurs Pos/Neg : " + errPosNeg
+				+ "/" + reference.size());
 		return 0;
 	}
 
