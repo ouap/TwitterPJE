@@ -91,7 +91,11 @@ public class ValidationCroisee {
 			for (TweetInfos tweetcourrant : sousEnsembles.get(i)) {
 				classeKnn = Model.knn(tweetcourrant.getTweet(), 30, baseCalcul);
 				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
-
+				// classeBayes = classifBayes.classifierBayes(fichier, tweet,
+				// classif);
+				// classeBayesBiG =
+				// classifBayesBiGramme.classifierBayesBiGramme(fichier, tweet,
+				// classif);
 				System.out.println("Note KNN -> " + classeKnn
 						+ ", Note PosNeg -> " + classePosNeg + " Note ref : "
 						+ reference.get(tweetcourrant));
