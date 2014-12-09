@@ -1,18 +1,17 @@
 package model.performance;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import model.Model;
+import model.TweetInfos;
+
 public class ValidationCroisee {
-	List<List<String>> sousEnsembles;
-	Map<String, Integer> reference;
+	List<List<TweetInfos>> sousEnsembles;
+	Map<TweetInfos, Integer> reference;
 
 	/**
 	 * Initialisation de la liste des sous-ensemble et de la map référence
@@ -21,10 +20,10 @@ public class ValidationCroisee {
 	 *            le nombre de sous-ensembles
 	 */
 	void initArray(int k) {
-		sousEnsembles = new ArrayList<List<String>>(k);
-		reference = new HashMap<String, Integer>();
+		sousEnsembles = new ArrayList<List<TweetInfos>>(k);
+		reference = new HashMap<TweetInfos, Integer>();
 		for (int i = 0; i < k; i++) {
-			sousEnsembles.add(new ArrayList<String>());
+			sousEnsembles.add(new ArrayList<TweetInfos>());
 		}
 	}
 
@@ -36,56 +35,49 @@ public class ValidationCroisee {
 	 * @throws IOException
 	 */
 	void creerSousEnsembles(int k) throws IOException {
-		int pos, neg, neutre;
-		pos = neg = neutre = 0;
-
+		List<TweetInfos> base = Model.getBase();
+		int neg, pos, neutre;
+		neg = neutre = pos = 0;
 		initArray(k);
 
-		String fichier = new java.io.File(".").getCanonicalPath()
-				+ "/tweets/base.csv";
-		InputStream ips = new FileInputStream(fichier);
-		InputStreamReader ipsr = new InputStreamReader(ips);
-		@SuppressWarnings("resource")
-		BufferedReader br = new BufferedReader(ipsr);
-		String read;
-		String[] ligne;
+		for (TweetInfos tweetInfos : base) {
 
-		while ((read = br.readLine()) != null) {
-			ligne = read.split(";");
-
-			switch (Integer.parseInt(ligne[5])) {
+			switch (tweetInfos.getNote()) {
 			case 0:
-
 				if (neg >= k)
 					neg = 0;
-				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(neg).add(ligne[2]);
+				reference.put(tweetInfos, tweetInfos.getNote());
+				sousEnsembles.get(neg).add(tweetInfos);
 				neg++;
 				break;
 			case 2:
 				if (neutre >= k)
 					neutre = 0;
-				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(neutre).add(ligne[2]);
+				reference.put(tweetInfos, tweetInfos.getNote());
+				sousEnsembles.get(neutre).add(tweetInfos);
 				neutre++;
 				break;
 			case 4:
 				if (pos >= k)
 					pos = 0;
-				reference.put(ligne[2], Integer.parseInt(ligne[5]));
-				sousEnsembles.get(pos).add(ligne[2]);
+				reference.put(tweetInfos, tweetInfos.getNote());
+				sousEnsembles.get(pos).add(tweetInfos);
 				pos++;
 				break;
 			}
 
 		}
-		for (List<String> sous : sousEnsembles) {
+		for (List<TweetInfos> sous : sousEnsembles) {
 			System.out.println("Taille " + sous.size());
 		}
 
 	}
 
-	int calculerTxErreur(int k) {
+	int calculerTxErreur(int k) throws IOException {
+		int classeKnn, classeBayes, classeBayesBiG, classePosNeg;
+		int errKnn, errBayes, errBayesBiG, errPosNeg;
+		errBayes = errBayesBiG = errKnn = errPosNeg = 0;
+
 		try {
 			creerSousEnsembles(k);
 		} catch (IOException e) {
@@ -93,17 +85,55 @@ public class ValidationCroisee {
 		}
 
 		for (int i = 0; i < k; i++) {
-			for (int j = 0; j < sousEnsembles.get(i).size(); j++) {
+			List<TweetInfos> baseCalcul = concatEnsemble(i);
+			System.out.println("NOTATION SOUS-ENSEMBLE " + (i + 1));
+			for (TweetInfos tweetcourrant : sousEnsembles.get(i)) {
+				classeKnn = Model.knn(tweetcourrant.getTweet(), 30, baseCalcul);
+				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
+
+				if (classeKnn != reference.get(tweetcourrant)) {
+					errKnn++;
+				} else {
+					System.out.println("	KNN OK");
+				}
+
+				if (classePosNeg != reference.get(tweetcourrant)) {
+					errPosNeg++;
+				} else {
+					System.out.println("	Pos/Neg OK");
+				}
+				System.out.println("Note KNN -> " + classeKnn
+						+ ", Note PosNeg -> " + classePosNeg + " Note ref : "
+						+ reference.get(tweetcourrant));
 
 			}
-
 		}
 
+		System.out.println("Nb erreurs knn : " + errKnn
+				+ "\nNb erreurs Pos/Neg : " + errPosNeg);
 		return 0;
+	}
 
+	/**
+	 * Fait l'union de tout les sous-ensembles sauf celui qui doit être noté
+	 * 
+	 * @param exception
+	 *            indice du sous-ensemble à ne pas prendre en compte
+	 * @return la liste de tweet des sous-ensembles concaténés
+	 */
+	public List<TweetInfos> concatEnsemble(int exception) {
+		List<TweetInfos> concat = new ArrayList<TweetInfos>();
+		for (int i = 0; i < sousEnsembles.size(); i++) {
+			if (i != exception) {
+				concat.addAll(sousEnsembles.get(i));
+			}
+		}
+		System.out.println("Taille BaseUnion : " + concat.size());
+		return concat;
 	}
 
 	public static void main(String[] args) throws IOException {
+		Model.chargerBaseTweet();
 		new ValidationCroisee().calculerTxErreur(10);
 	}
 }
