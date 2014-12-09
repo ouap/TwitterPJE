@@ -7,16 +7,17 @@ import javax.swing.JComboBox;
 import javax.swing.JList;
 
 import model.Model;
+import view.View;
 
 public class ComboboxListener implements ItemListener {
 	private Model model;
 	JList<String> listTweets;
 	JComboBox combobox;
+	View vue;
 
-	public ComboboxListener(Model m, JList<String> l, JComboBox combo) {
+	public ComboboxListener(Model m, View vue) {
 		model = m;
-		listTweets = l;
-
+		this.vue = vue;
 	}
 
 	@Override
@@ -24,10 +25,8 @@ public class ComboboxListener implements ItemListener {
 		if (e.getStateChange() == ItemEvent.SELECTED) {
 			@SuppressWarnings("unchecked")
 			int item = Integer.parseInt(((String) e.getItem()));
-
-			model.getNoteTweets().remove(listTweets.getSelectedIndex());
-			model.getNoteTweets().add(listTweets.getSelectedIndex(), item);
-
+			model.getListTweets().get(vue.list.getSelectedIndex())
+					.setNote(item);
 		}
 	}
 }

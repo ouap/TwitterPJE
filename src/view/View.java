@@ -29,7 +29,7 @@ import model.TweetInfos;
 import twitter4j.TwitterException;
 import controler.ComboboxListener;
 import controler.ListController;
-import controler.SaveController;
+import controler.NoterController;
 import controler.SearchController;
 
 /**
@@ -47,7 +47,7 @@ public class View extends JFrame implements Observer {
 	public JLabel limitLabel, userContent;
 	public JTextArea tweetContent;
 	public JComboBox<String> comboBox;
-	JList<String> list;
+	public JList<String> list;
 	Model model;
 
 	/**
@@ -158,10 +158,9 @@ public class View extends JFrame implements Observer {
 
 		// On ajoute les controleurs
 		SearchController searchControl = new SearchController(model);
-		SaveController saveControl = new SaveController(model);
+		NoterController saveControl = new NoterController(model);
 		ListController listControl = new ListController(model, this);
-		ComboboxListener comboListener = new ComboboxListener(model, list,
-				comboBox);
+		ComboboxListener comboListener = new ComboboxListener(model, this);
 		list.addListSelectionListener(listControl);
 		searchField.addActionListener(searchControl);
 		btnChargerBase.addActionListener(new ActionListener() {

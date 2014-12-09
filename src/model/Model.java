@@ -33,7 +33,6 @@ import view.View;
 public class Model extends Observable {
 	private List<TweetInfos> listTweets;
 	private List<TweetInfos> base;
-	private List<Integer> noteTweets;
 
 	public enum Classe {
 		POSITIF, NEGATIF, NEUTRE
@@ -62,13 +61,6 @@ public class Model extends Observable {
 	 */
 	public List<TweetInfos> getBase() {
 		return base;
-	}
-
-	/**
-	 * @return la liste des notes des tweets
-	 */
-	public List<Integer> getNoteTweets() {
-		return noteTweets;
 	}
 
 	public List<TweetInfos> getTweetByClasse(Classe classe) {
@@ -147,7 +139,6 @@ public class Model extends Observable {
 	public void chargerBaseTweet() {
 		base = new ArrayList<TweetInfos>();
 		listTweets = new ArrayList<TweetInfos>();
-		noteTweets = new ArrayList<Integer>();
 		LIST_TWEET_NEG = new ArrayList<TweetInfos>();
 		LIST_TWEET_NEUTRE = new ArrayList<TweetInfos>();
 		LIST_TWEET_POS = new ArrayList<TweetInfos>();
@@ -191,8 +182,31 @@ public class Model extends Observable {
 			System.out.println(e.toString());
 		}
 
-		for (int i = 0; i < 10; i++) {
-			System.out.println(base.get(i).getId());
+	}
+
+	public void noter(List<TweetInfos> listeTweets, int algo)
+			throws IOException {
+
+		for (TweetInfos tweet : listTweets) {
+			// Nettoyage du tweet + récupération de sa classe
+			String text = nettoyerTweet(tweet.getTweet());
+			int classe = 0;
+
+			switch (algo) {
+			case 1:
+				classe = getClassePosNeg(text);
+				break;
+			case 2:
+				classe = knn(text, 30, base);
+				break;
+			case 3:
+				/*
+				 * classe = new classifBayes().classifierBayes(fichier, tweet,
+				 * classif);
+				 */
+				break;
+			}
+			tweet.setNote(classe);
 		}
 	}
 
@@ -222,7 +236,7 @@ public class Model extends Observable {
 
 					switch (algo) {
 					case 1:
-						classe = knn(text, 5, "base");
+						classe = knn(text, 30, base);
 						break;
 					case 2:
 						classe = 2;
@@ -419,7 +433,6 @@ public class Model extends Observable {
 			while ((ligne = br.readLine()) != null) {
 				mots = ligne.split(", ");
 				for (String mot6 : mots) {
-					System.out.println(mot6);
 					String mot = mot6.concat(" ");
 
 					/*
@@ -522,6 +535,8 @@ public class Model extends Observable {
 
 		// On calcule la nombre d'apparition de chaque classe
 		for (Entry<String, Integer> entry : voisins.entrySet()) {
+			// System.out.println("Voisin : " + entry.getKey() + "Note: "+
+			// entry.getValue());
 			switch (entry.getValue()) {
 			case 0:
 				classe0++;
@@ -557,38 +572,29 @@ public class Model extends Observable {
 	 * @return la classe associée au tweet
 	 * @throws IOException
 	 */
-	public static int knn(String t, int k, String filename) throws IOException {
+	public static int knn(String t, int k, List<TweetInfos> listName)
+			throws IOException {
 		Map<String, Integer> voisins = new HashMap<String, Integer>(k);
 		Map<String, Integer> distanceVoisins = new HashMap<String, Integer>(k);
-
-		String fichier = new java.io.File(".").getCanonicalPath() + "/tweets/"
-				+ filename + ".csv";
-		InputStream ips = new FileInputStream(fichier);
-		InputStreamReader ipsr = new InputStreamReader(ips);
-		@SuppressWarnings("resource")
-		BufferedReader br = new BufferedReader(ipsr);
-		String read;
-		String newTweet = null;
+		int i, j;
+		String newTweet;
 		int classe;
+		// System.out.println("Tweet a classer : " + t);
+		for (i = 0; i < k; i++) {
+			// On récupère les informations du tweet
+			newTweet = listName.get(i).getTweet();
+			classe = listName.get(i).getNote();
+			// On associe le tweet lu avec sa distance avec le tweet de
+			// référence
+			distanceVoisins.put(newTweet, distanceTweet(newTweet, t));
+			voisins.put(newTweet, classe);
 
-		for (int i = 0; i < k; i++) {
-			if ((read = br.readLine()) != null) {
-				// On récupère les informations du tweet
-				String[] ligne = read.split(";");
-				newTweet = ligne[2];
-				classe = Integer.parseInt(ligne[5]);
-				// On associe le tweet lu avec sa distance avec le tweet de
-				// référence
-				distanceVoisins.put(newTweet, distanceTweet(newTweet, t));
-				voisins.put(newTweet, classe);
-			}
 		}
+		// System.out.println("Taille voisins : " + voisins.size());
 
-		while ((read = br.readLine()) != null) {
-			String[] ligne = read.split(";");
-			newTweet = ligne[2];
-			System.out.println(newTweet);
-			classe = Integer.parseInt(ligne[5]);
+		for (j = i; j < listName.size(); j++) {
+			newTweet = listName.get(j).getTweet();
+			classe = listName.get(j).getNote();
 
 			// On ajoute ce tweet à la place d'un des voisins si nécéssaire
 			int newDistance = distanceTweet(newTweet, t);
@@ -604,7 +610,8 @@ public class Model extends Observable {
 			}
 
 		}
-		br.close();
+
+		System.out.println("Note finale : " + vote(voisins));
 		return vote(voisins);
 	}
 
@@ -612,4 +619,5 @@ public class Model extends Observable {
 		new View(new Model());
 
 	}
+
 }
