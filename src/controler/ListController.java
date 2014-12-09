@@ -35,6 +35,7 @@ public class ListController implements ListSelectionListener {
 			} else if (model.getListTweets().get(index).getNote() == 2) {
 				vue.comboBox.setSelectedIndex(1);
 			} else {
+				
 				vue.comboBox.setSelectedIndex(2);
 			}
 		}
