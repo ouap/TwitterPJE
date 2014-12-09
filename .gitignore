@@ -1,11 +1,5 @@
 /bin/
 
-tweets/tweets.csv
-
-tweets/negative.txt
-
-tweets/positive.txt
-
 twitter4j.properties
 
 negatifs.csv
@@ -13,8 +7,6 @@ negatifs.csv
 neutres.csv
 
 positifs.csv
-
-tweets/Search.csv
 
 gitSetProxy.sh
 
