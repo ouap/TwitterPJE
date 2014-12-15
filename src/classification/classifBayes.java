@@ -1,7 +1,12 @@
 package classification;
+
+import java.io.IOException;
 import java.util.List;
 
+import model.Model;
+import model.Model.Classe;
 import model.TweetInfos;
+
 public class classifBayes {
 
 	/**
@@ -27,12 +32,12 @@ public class classifBayes {
 	 * @param fichier
 	 * @return
 	 * @throws IOException
-	 */	
-	public static int[] nbTweetsMood(List<TweetInfos> listMood){
+	 */
+	public static int[] nbTweetsMood(List<TweetInfos> listMood) {
 		int[] res = new int[2];
 		int cpt = 0;
 		res[0] = listMood.size();
-		for(int i=0;i<listMood.size();i++){
+		for (int i = 0; i < listMood.size(); i++) {
 			cpt += listMood.get(i).getTweet().length();
 		}
 		res[1] = cpt;
@@ -50,23 +55,23 @@ public class classifBayes {
 	 * @return mots
 	 * @throws IOException
 	 */
-	public static String[] tabMotsMood(List<TweetInfos> listMood){
+	public static String[] tabMotsMood(List<TweetInfos> listMood) {
 		int tab[] = nbTweetsMood(listMood);
 		String resTmp[] = new String[tab[1]];
 		int cpt = 0;
-		int i,j;
-		for(i=0;i<listMood.size();i++){
+		int i, j;
+		for (i = 0; i < listMood.size(); i++) {
 			String[] tmp = listMood.get(i).getTweet().split(" ");
-			for(j=0;j<tmp.length;j++){
+			for (j = 0; j < tmp.length; j++) {
 				resTmp[cpt] = tmp[j];
 				cpt++;
 			}
 		}
 		int cpt2 = 1;
-		for(i = 1;i<resTmp.length;i++){
+		for (i = 1; i < resTmp.length; i++) {
 			int alreadyPresent = 0;
-			for(j = 0;j<i;j++){
-				if(resTmp[i] == resTmp[j])
+			for (j = 0; j < i; j++) {
+				if (resTmp[i] == resTmp[j])
 					alreadyPresent = 1;
 			}
 			if (alreadyPresent == 0)
@@ -75,20 +80,19 @@ public class classifBayes {
 		String res[] = new String[cpt2];
 		int tmp = 1;
 		res[0] = resTmp[0];
-		for(i=0;i<cpt2;i++){
+		for (i = 0; i < cpt2; i++) {
 			int alreadyPresent = 0;
-			for(j=0;j<i;j++){
-				if(resTmp[i] == resTmp[j])
+			for (j = 0; j < i; j++) {
+				if (resTmp[i] == resTmp[j])
 					alreadyPresent = 1;
 			}
-			if ((alreadyPresent == 0) && (tmp < cpt2)){
+			if ((alreadyPresent == 0) && (tmp < cpt2)) {
 				res[tmp] = resTmp[i];
 				tmp++;
 			}
 		}
 		return res;
 	}
-
 
 	/**
 	 * Pour un tableau deja calcule avec les mots presents dans les tweets, on
@@ -101,17 +105,17 @@ public class classifBayes {
 	 *            la base d'apprentissage (soit negatifs, positifs ou neutres)
 	 * @return
 	 */
-	public static int[] nbMots(String[] mots,List<TweetInfos> listMood) {
+	public static int[] nbMots(String[] mots, List<TweetInfos> listMood) {
 		int nbMots[] = new int[mots.length];
-		int i,j,k;
-		for(i=0;i<mots.length;i++){
+		int i, j, k;
+		for (i = 0; i < mots.length; i++) {
 			nbMots[i] = 0;
 		}
-		for(i=0;i<listMood.size();i++){
+		for (i = 0; i < listMood.size(); i++) {
 			String tmp[] = listMood.get(i).getTweet().split(" ");
-			for(j=0;j<tmp.length;j++){
-				for(k=0;k<mots.length;k++){
-					if(tmp[j].equals(mots[k])){
+			for (j = 0; j < tmp.length; j++) {
+				for (k = 0; k < mots.length; k++) {
+					if (tmp[j].equals(mots[k])) {
 						nbMots[k]++;
 					}
 				}
@@ -119,8 +123,7 @@ public class classifBayes {
 		}
 		return nbMots;
 	}
-	
-	
+
 	public static int nbMotsTotalMood(int[] nbMots) {
 		int nbTot = 0;
 		for (int nbMot : nbMots) {
@@ -182,25 +185,26 @@ public class classifBayes {
 		return nbMots;
 	}
 
-	
-	public static float probaTweetMood(List<TweetInfos> listTweets,List<TweetInfos> listMood, List<TweetInfos> secondList, List<TweetInfos> thirdList, String tweet, int classif){
+	public static float probaTweetMood(List<TweetInfos> listTweets,
+			List<TweetInfos> listMood, List<TweetInfos> secondList,
+			List<TweetInfos> thirdList, String tweet, int classif) {
 		int nbTweetsMood[] = nbTweetsMood(listTweets);
 		int nbTweets = listTweets.size();
-		
+
 		String[] motsMood = tabMotsMood(listMood);
 		String[] secondMotsMood = tabMotsMood(secondList);
 		String[] thirdMotsMood = tabMotsMood(thirdList);
-		
+
 		int nbMotsMood[] = nbMots(motsMood, listMood);
 		int nbMotsMoodSecond[] = nbMots(secondMotsMood, secondList);
 		int nbMotsMoodThird[] = nbMots(thirdMotsMood, thirdList);
-		
+
 		int nbMotsTotMood = nbMotsTotalMood(nbMotsMood);
 		int nbMotsTotSecond = nbMotsTotalMood(nbMotsMoodSecond);
 		int nbMotsTotThird = nbMotsTotalMood(nbMotsMoodThird);
-		
+
 		int nbTotal = nbMotsTotMood + nbMotsTotSecond + nbMotsTotThird;
-		
+
 		String[] motsTweet = tweetToTab(tweet);
 		int[] nbMotsTweet = nbMotstweet(tweet);
 		float probaMood = 0;
@@ -218,12 +222,12 @@ public class classifBayes {
 							if (classif == 0) {
 								/* Presence */
 
-								probaMot = (float)(nbMotsMood[j] + 1)
-										/ (float)(nbMotsTotMood + nbTotal);
+								probaMot = (float) (nbMotsMood[j] + 1)
+										/ (float) (nbMotsTotMood + nbTotal);
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										((float)(nbMotsMood[j]+1) / (float)(nbMotsTotMood + nbTotal)),
+										((float) (nbMotsMood[j] + 1) / (float) (nbMotsTotMood + nbTotal)),
 										nbMotsTweet[i]);
 
 							}
@@ -239,8 +243,6 @@ public class classifBayes {
 		return proba;
 	}
 
-
-
 	/**
 	 * Classification de bayes, classif sera mis � 0 pour la classification par
 	 * pr�sence, � 1 pour la classification par fr�quence
@@ -250,15 +252,21 @@ public class classifBayes {
 	 * @param classif
 	 * @return
 	 * @throws IOException
-	 */	
-	public int classifierBayes(List<TweetInfos> listTweets, List<TweetInfos> listPos, List<TweetInfos> listNeg, List<TweetInfos> listNeutre, String tweet, int classif)
-	 {
-		float probaPos = probaTweetMood(listTweets, listPos, listNeg, listNeutre, tweet, classif);
-		System.out.println("positifs : " + probaPos);
-		float probaNeg = probaTweetMood(listTweets, listNeg, listPos, listNeutre, tweet, classif);
-		System.out.println("Negatifs : " + probaNeg);
-		float probaNeutre = probaTweetMood(listTweets,listNeutre, listPos, listNeg, tweet, classif);
-		System.out.println("Neutres : " + probaNeutre);
+	 */
+	public static int classifierBayes(List<TweetInfos> listTweets,
+			String tweet, int classif) {
+
+		List<TweetInfos> listNeg, listPos, listNeutre;
+		listNeg = Model.getTweetByClasse(Classe.NEGATIF);
+		listNeutre = Model.getTweetByClasse(Classe.NEUTRE);
+		listPos = Model.getTweetByClasse(Classe.POSITIF);
+
+		float probaPos = probaTweetMood(listTweets, listPos, listNeg,
+				listNeutre, tweet, classif);
+		float probaNeg = probaTweetMood(listTweets, listNeg, listPos,
+				listNeutre, tweet, classif);
+		float probaNeutre = probaTweetMood(listTweets, listNeutre, listPos,
+				listNeg, tweet, classif);
 		if (probaPos > probaNeg && probaPos > probaNeutre) {
 			return 4;
 		} else {

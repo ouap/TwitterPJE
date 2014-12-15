@@ -27,6 +27,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import view.View;
 import classification.classifBayes;
+import classification.classifBayesBiGramme;
 
 /**
  * @author Yusuke Yamamoto - yusuke at mac.com
@@ -145,8 +146,8 @@ public class Model extends Observable {
 
 			for (Status status : listStatus) {
 				listTweets.add(new TweetInfos(status.getId(), status.getUser()
-						.getName(), status.getText(), status.getCreatedAt()
-						.toString(), keyWord, -1));
+						.getName(), nettoyerTweet(status.getText()), status
+						.getCreatedAt().toString(), keyWord, -1));
 
 			}
 			setChanged();
@@ -156,6 +157,8 @@ public class Model extends Observable {
 			te.printStackTrace();
 			System.out.println("Failed to search tweets: " + te.getMessage());
 			System.exit(-1);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -229,9 +232,18 @@ public class Model extends Observable {
 				classe = knn(text, 30, base);
 				break;
 			case 3:
-				classe = new classifBayes().classifierBayes(listTweets,
-						LIST_TWEET_POS, LIST_TWEET_NEG, LIST_TWEET_NEUTRE,
-						text, 0); /* A FINIR POUR TESTER LES DIFFERENTES CLASSIF ! */
+				classe = classifBayes.classifierBayes(listTweets, text, 0);
+				break;
+			case 4:
+				classe = classifBayes.classifierBayes(listTweets, text, 1);
+				break;
+			case 5:
+				classe = classifBayesBiGramme.classifierBayesBiGramme(
+						listTweets, text, 1);
+				break;
+			case 6:
+				classe = classifBayesBiGramme.classifierBayesBiGramme(
+						listTweets, text, 0);
 				break;
 			}
 			tweet.setNote(classe);
@@ -248,8 +260,7 @@ public class Model extends Observable {
 	 * @param algo
 	 *            l'algo à utiliser pour la classification
 	 */
-	public void save(List<TweetInfos> listTweets, int algo) {
-		int i = 0;
+	public void save() {
 
 		try {
 			FileWriter writer = new FileWriter(
@@ -259,25 +270,11 @@ public class Model extends Observable {
 			for (TweetInfos tweet : listTweets) {
 				if (!alreadyIn(tweet.getId())) {
 					// Nettoyage du tweet + récupération de sa classe
-					String text = nettoyerTweet(tweet.getTweet());
-					int classe = 0;
-
-					switch (algo) {
-					case 1:
-						classe = knn(text, 30, base);
-						break;
-					case 2:
-						classe = 2;
-						break;
-					case 3:
-						classe = getClassePosNeg(text);
-						break;
-					}
 
 					// Ecriture
 					writer.write(tweet.getId() + ";" + tweet.getUser() + ";"
-							+ text + ";" + tweet.getDate() + ";"
-							+ tweet.getSearch() + ";" + classe + "\n");
+							+ tweet.getTweet() + ";" + tweet.getDate() + ";"
+							+ tweet.getSearch() + ";" + tweet.getNote() + "\n");
 				}
 			}
 

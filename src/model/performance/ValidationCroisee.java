@@ -7,11 +7,35 @@ import java.util.List;
 import java.util.Map;
 
 import model.Model;
+import model.Model.Classe;
 import model.TweetInfos;
+import view.BarChart;
+import view.PieChart;
+import classification.classifBayes;
+import classification.classifBayesBiGramme;
 
 public class ValidationCroisee {
 	List<List<TweetInfos>> sousEnsembles;
 	Map<TweetInfos, Integer> reference;
+	Map<String, Float> dataBase;
+	Map<String, Integer> dataBayes;
+	Map<String, Integer> dataKnnPosNeg;
+
+	public ValidationCroisee() {
+		dataBase = new HashMap<String, Float>();
+		dataKnnPosNeg = new HashMap<String, Integer>();
+		dataBayes = new HashMap<String, Integer>();
+		Model.chargerBaseTweet();
+		try {
+			calculerTxErreur(5);
+		} catch (IOException e) {
+			System.out.println("Erreur lors l'analyse du nombre d'erreurs");
+		}
+		createRatioBase();
+		afficherRatioBase(dataBase);
+		afficherBayesData(dataBayes);
+		afficherKnnData(dataKnnPosNeg);
+	}
 
 	/**
 	 * Initialisation de la liste des sous-ensemble et de la map référence
@@ -74,50 +98,69 @@ public class ValidationCroisee {
 	}
 
 	void calculerTxErreur(int k) throws IOException {
-		int classeKnn, classeBayes, classeBayesBiG, classePosNeg;
-		int errKnn, errBayes, errBayesBiG, errPosNeg;
-		errBayes = errBayesBiG = errKnn = errPosNeg = 0;
+		int classeKnn, classeBayesUniFreq, classeBayesUniPres, classeBayesBiGFreq, classeBayesBiGPres, classePosNeg;
+		int errKnn, errBayesUniFreq, errBayesUniPres, errBayesBigFreq, errBayesBigPres, errPosNeg;
+		errBayesUniFreq = errBayesBigFreq = errBayesBigPres = errBayesUniPres = errKnn = errPosNeg = 0;
 
 		try {
 			creerSousEnsembles(k);
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Erreur lors de la creation des sous ensembles");
 		}
 
 		for (int i = 0; i < k; i++) {
 			List<TweetInfos> baseCalcul = concatEnsemble(i);
-			System.out.println("----------------------------------");
-			System.out.println("NOTATION SOUS-ENSEMBLE " + (i + 1));
+
 			for (TweetInfos tweetcourrant : sousEnsembles.get(i)) {
 				classeKnn = Model.knn(tweetcourrant.getTweet(), 30, baseCalcul);
-				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
-				// classeBayes = classifBayes.classifierBayes(fichier, tweet,
-				// classif);
-				// classeBayesBiG =
-				// classifBayesBiGramme.classifierBayesBiGramme(fichier, tweet,
-				// classif);
-				System.out.println("Note KNN -> " + classeKnn
-						+ ", Note PosNeg -> " + classePosNeg + " Note ref : "
-						+ reference.get(tweetcourrant));
 
+				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
+
+				classeBayesUniPres = classifBayes.classifierBayes(baseCalcul,
+						tweetcourrant.getTweet(), 0);
+				classeBayesUniFreq = classifBayes.classifierBayes(baseCalcul,
+						tweetcourrant.getTweet(), 1);
+				classeBayesBiGPres = classifBayesBiGramme
+						.classifierBayesBiGramme(baseCalcul,
+								tweetcourrant.getTweet(), 0);
+				classeBayesBiGFreq = classifBayesBiGramme
+						.classifierBayesBiGramme(baseCalcul,
+								tweetcourrant.getTweet(), 1);
+
+				// Verification de la notation de chaque classifieur
 				if (classeKnn != reference.get(tweetcourrant)) {
 					errKnn++;
-				} else {
-					System.out.println("	KNN OK");
 				}
 
 				if (classePosNeg != reference.get(tweetcourrant)) {
 					errPosNeg++;
-				} else {
-					System.out.println("	Pos/Neg OK");
+				}
+				if (classeBayesUniPres != reference.get(tweetcourrant)) {
+					errBayesUniPres++;
+
+				}
+				if (classeBayesUniFreq != reference.get(tweetcourrant)) {
+					errBayesUniFreq++;
+
+				}
+				if (classeBayesBiGFreq != reference.get(tweetcourrant)) {
+					errBayesBigFreq++;
+				}
+				if (classeBayesBiGPres != reference.get(tweetcourrant)) {
+					errBayesBigPres++;
 				}
 
 			}
 		}
 
-		System.out.println("Nb erreurs knn : " + errKnn + "/"
-				+ reference.size() + "\nNb erreurs Pos/Neg : " + errPosNeg
-				+ "/" + reference.size());
+		dataBayes.put("UnigrammeFreq", errBayesUniFreq);
+		dataBayes.put("UnigrammePres", errBayesUniPres);
+		dataBayes.put("BigrammeFreq", errBayesBigFreq);
+		dataBayes.put("BigrammePres", errBayesBigPres);
+
+		dataKnnPosNeg.put("Knn", errKnn);
+		dataKnnPosNeg.put("Pos/Neg", errPosNeg);
+
 	}
 
 	/**
@@ -139,8 +182,29 @@ public class ValidationCroisee {
 		return concat;
 	}
 
-	public static void main(String[] args) throws IOException {
-		Model.chargerBaseTweet();
-		new ValidationCroisee().calculerTxErreur(10);
+	public void createRatioBase() {
+		float pos, neg, neutre;
+		int total = Model.getBase().size();
+
+		pos = ((float) Model.getTweetByClasse(Classe.POSITIF).size() / total) * 100;
+		neg = ((float) Model.getTweetByClasse(Classe.NEGATIF).size() / total) * 100;
+		neutre = ((float) Model.getTweetByClasse(Classe.NEUTRE).size() / total) * 100;
+		dataBase.put("Positif", pos);
+		dataBase.put("Negatif", neg);
+		dataBase.put("Neutre", neutre);
+
 	}
+
+	public void afficherRatioBase(Map<String, Float> ratioBase) {
+		new PieChart("Ratio Tweets Base", ratioBase);
+	}
+
+	public void afficherBayesData(Map<String, Integer> dataBayes) {
+		new BarChart("Statistiques Bayes", dataBayes);
+	}
+
+	public void afficherKnnData(Map<String, Integer> dataKnn) {
+		new BarChart("Statistiques Knn", dataKnn);
+	}
+
 }

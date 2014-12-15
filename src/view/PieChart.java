@@ -1,9 +1,10 @@
-package model.performance;
+package view;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.Map;
 
+import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import org.jfree.chart.ChartFactory;
@@ -13,10 +14,9 @@ import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
-import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RefineryUtilities;
 
-public class PieChart extends ApplicationFrame {
+public class PieChart extends JFrame {
 	/**
 	 * 
 	 */
@@ -27,6 +27,8 @@ public class PieChart extends ApplicationFrame {
 		JPanel localJPanel = createDemoPanel(title, donnees);
 		localJPanel.setPreferredSize(new Dimension(500, 270));
 		setContentPane(localJPanel);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
 		pack();
 		RefineryUtilities.centerFrameOnScreen(this);
 		setVisible(true);

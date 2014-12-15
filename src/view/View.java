@@ -33,6 +33,7 @@ import controler.CheckBoxController;
 import controler.ComboboxController;
 import controler.ListController;
 import controler.NoterController;
+import controler.SaveController;
 import controler.SearchController;
 
 /**
@@ -125,9 +126,9 @@ public class View extends JFrame implements Observer {
 		btnKnn.setBounds(270, 273, 117, 29);
 		panel.add(btnKnn);
 
-		JButton btnBayesienne = new JButton("Bayesienne");
-		btnBayesienne.setBounds(399, 273, 117, 29);
-		panel.add(btnBayesienne);
+		JButton btnBayesUniPres = new JButton("BayesUniPres");
+		btnBayesUniPres.setBounds(399, 273, 117, 29);
+		panel.add(btnBayesUniPres);
 
 		JButton btnMotsPosneg = new JButton("Pos/Neg");
 		btnMotsPosneg.setBounds(141, 273, 117, 29);
@@ -158,13 +159,29 @@ public class View extends JFrame implements Observer {
 		panel.add(labelClassement);
 
 		JButton btnAnalyse = new JButton("Analyse");
-		btnAnalyse.setBounds(141, 333, 117, 29);
+		btnAnalyse.setBounds(141, 341, 117, 29);
 		panel.add(btnAnalyse);
 
-		JLabel lblStats = new JLabel("Stats :");
+		JLabel lblStats = new JLabel("Autres");
 		lblStats.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		lblStats.setBounds(31, 338, 61, 16);
+		lblStats.setBounds(31, 346, 61, 16);
 		panel.add(lblStats);
+
+		JButton btnBayesUniFreq = new JButton("BayesUniFreq");
+		btnBayesUniFreq.setBounds(141, 306, 117, 29);
+		panel.add(btnBayesUniFreq);
+
+		JButton btnBayesBigPres = new JButton("BayesBigPres");
+		btnBayesBigPres.setBounds(270, 306, 117, 29);
+		panel.add(btnBayesBigPres);
+
+		JButton btnBayesBigFreq = new JButton("BayesBigFreq");
+		btnBayesBigFreq.setBounds(399, 306, 117, 29);
+		panel.add(btnBayesBigFreq);
+
+		JButton btnSauver = new JButton("Sauver");
+		btnSauver.setBounds(270, 341, 117, 29);
+		panel.add(btnSauver);
 
 		// Model List
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
@@ -190,7 +207,8 @@ public class View extends JFrame implements Observer {
 
 		// On ajoute les controleurs
 		SearchController searchControl = new SearchController(model);
-		NoterController saveControl = new NoterController(model);
+		NoterController noteControl = new NoterController(model);
+		SaveController savecontrol = new SaveController(model);
 		ListController listControl = new ListController(model, this);
 		ComboboxController comboControl = new ComboboxController(model, this);
 		CheckBoxController checkControl = new CheckBoxController(model,
@@ -198,6 +216,7 @@ public class View extends JFrame implements Observer {
 		AnalyseController analyseControl = new AnalyseController();
 		list.addListSelectionListener(listControl);
 		searchField.addActionListener(searchControl);
+		btnSauver.addActionListener(savecontrol);
 		btnChargerBase.addActionListener(new ActionListener() {
 
 			@Override
@@ -206,9 +225,12 @@ public class View extends JFrame implements Observer {
 				update(model, new Object());
 			}
 		});
-		btnKnn.addActionListener(saveControl);
-		btnMotsPosneg.addActionListener(saveControl);
-		btnBayesienne.addActionListener(saveControl);
+		btnKnn.addActionListener(noteControl);
+		btnMotsPosneg.addActionListener(noteControl);
+		btnBayesUniPres.addActionListener(noteControl);
+		btnBayesUniFreq.addActionListener(noteControl);
+		btnBayesBigFreq.addActionListener(noteControl);
+		btnBayesBigPres.addActionListener(noteControl);
 		comboBox.addItemListener(comboControl);
 		checkProxy.addItemListener(checkControl);
 		btnAnalyse.addActionListener(analyseControl);
