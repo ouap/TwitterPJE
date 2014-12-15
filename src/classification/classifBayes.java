@@ -75,13 +75,13 @@ public class classifBayes {
 		String res[] = new String[cpt2];
 		int tmp = 1;
 		res[0] = resTmp[0];
-		for(i=0;i<res.length;i++){
+		for(i=0;i<cpt2;i++){
 			int alreadyPresent = 0;
 			for(j=0;j<i;j++){
 				if(resTmp[i] == resTmp[j])
 					alreadyPresent = 1;
 			}
-			if (alreadyPresent == 0){
+			if ((alreadyPresent == 0) && (tmp < cpt2)){
 				res[tmp] = resTmp[i];
 				tmp++;
 			}
@@ -111,7 +111,7 @@ public class classifBayes {
 			String tmp[] = listMood.get(i).getTweet().split(" ");
 			for(j=0;j<tmp.length;j++){
 				for(k=0;k<mots.length;k++){
-					if(tmp[j]==mots[k]){
+					if(tmp[j].equals(mots[k])){
 						nbMots[k]++;
 					}
 				}
@@ -190,7 +190,6 @@ public class classifBayes {
 		String[] motsMood = tabMotsMood(listMood);
 		String[] secondMotsMood = tabMotsMood(secondList);
 		String[] thirdMotsMood = tabMotsMood(thirdList);
-
 		
 		int nbMotsMood[] = nbMots(motsMood, listMood);
 		int nbMotsMoodSecond[] = nbMots(secondMotsMood, secondList);
@@ -218,12 +217,13 @@ public class classifBayes {
 							}
 							if (classif == 0) {
 								/* Presence */
-								probaMot = (nbMotsMood[j] + 1)
-										/ (nbMotsTotMood + nbTotal);
+
+								probaMot = (float)(nbMotsMood[j] + 1)
+										/ (float)(nbMotsTotMood + nbTotal);
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										((nbMotsMood[j]+1) / (nbMotsTotMood + nbTotal)),
+										((float)(nbMotsMood[j]+1) / (float)(nbMotsTotMood + nbTotal)),
 										nbMotsTweet[i]);
 
 							}

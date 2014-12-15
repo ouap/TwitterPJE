@@ -57,8 +57,8 @@ public class classifBayesBiGramme {
 		int i,j;
 		for(i=0;i<listMood.size();i++){
 			String[] tmp = listMood.get(i).getTweet().split(" ");
-			for(j=0;j<tmp.length;j++){
-				resTmp[cpt] = tmp[j]+tmp[j+1];
+			for(j=0;j<tmp.length-1;j++){
+				resTmp[cpt] = tmp[j]+" "+tmp[j+1];
 				cpt++;
 			}
 		}
@@ -78,10 +78,10 @@ public class classifBayesBiGramme {
 		for(i=0;i<res.length;i++){
 			int alreadyPresent = 0;
 			for(j=0;j<i;j++){
-				if(resTmp[i] == resTmp[j])
+				if((resTmp[i] == resTmp[j]))
 					alreadyPresent = 1;
 			}
-			if (alreadyPresent == 0){
+			if ((alreadyPresent == 0) && (tmp < cpt2)){
 				res[tmp] = resTmp[i];
 				tmp++;
 			}
@@ -111,7 +111,7 @@ public class classifBayesBiGramme {
 			String tmp[] = listMood.get(i).getTweet().split(" ");
 			for(j=0;j<tmp.length-1;j++){
 				for(k=0;k<mots.length;k++){
-					if(tmp[j]+tmp[j+1]==mots[k]){
+					if((tmp[j]+" "+tmp[j+1]).equals(mots[k])){
 						nbMots[k]++;
 					}
 				}
@@ -231,12 +231,12 @@ public class classifBayesBiGramme {
 							}
 							if (classif == 0) {
 								/* Presence */
-								probaMot = (nbMotsMood[j] + 1)
-										/ (nbMotsTotMood + nbTotal);
+								probaMot = ((float)(nbMotsMood[j] + 1))
+										/ ((float)(nbMotsTotMood + nbTotal));
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										((nbMotsMood[j]+1) / (nbMotsTotMood + nbTotal)),
+										(((float)(nbMotsMood[j]+1)) / ((float)(nbMotsTotMood + nbTotal))),
 										nbMotsTweet[i]);
 
 							}
