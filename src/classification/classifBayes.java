@@ -1,20 +1,11 @@
 package classification;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 
 import model.TweetInfos;
-import model.Model;
 public class classifBayes {
 
 	/**
-	 * Fonction qui permet de mettre a � la puissance b
+	 * Fonction qui permet de mettre a la puissance b
 	 * 
 	 * @param a
 	 * @param b
@@ -192,13 +183,25 @@ public class classifBayes {
 	}
 
 	
-	public static float probaTweetMood(List<TweetInfos> listTweets,List<TweetInfos> listMood,String tweet, int classif){
+	public static float probaTweetMood(List<TweetInfos> listTweets,List<TweetInfos> listMood, List<TweetInfos> secondList, List<TweetInfos> thirdList, String tweet, int classif){
 		int nbTweetsMood[] = nbTweetsMood(listTweets);
 		int nbTweets = listTweets.size();
+		
 		String[] motsMood = tabMotsMood(listMood);
-		int nbMotsTot[] = nbMots(motsMood, listTweets);
+		String[] secondMotsMood = tabMotsMood(secondList);
+		String[] thirdMotsMood = tabMotsMood(thirdList);
+
+		
 		int nbMotsMood[] = nbMots(motsMood, listMood);
+		int nbMotsMoodSecond[] = nbMots(secondMotsMood, secondList);
+		int nbMotsMoodThird[] = nbMots(thirdMotsMood, thirdList);
+		
 		int nbMotsTotMood = nbMotsTotalMood(nbMotsMood);
+		int nbMotsTotSecond = nbMotsTotalMood(nbMotsMoodSecond);
+		int nbMotsTotThird = nbMotsTotalMood(nbMotsMoodThird);
+		
+		int nbTotal = nbMotsTotMood + nbMotsTotSecond + nbMotsTotThird;
+		
 		String[] motsTweet = tweetToTab(tweet);
 		int[] nbMotsTweet = nbMotstweet(tweet);
 		float probaMood = 0;
@@ -216,11 +219,11 @@ public class classifBayes {
 							if (classif == 0) {
 								/* Presence */
 								probaMot = (nbMotsMood[j] + 1)
-										/ (nbMotsTot[j] + nbMotsTotMood);
+										/ (nbMotsTotMood + nbTotal);
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										((nbMotsMood[j]+1) / (nbMotsTot[j]+nbMotsTotMood)),
+										((nbMotsMood[j]+1) / (nbMotsTotMood + nbTotal)),
 										nbMotsTweet[i]);
 
 							}
@@ -248,14 +251,13 @@ public class classifBayes {
 	 * @return
 	 * @throws IOException
 	 */	
-	public static int classifierBayes(List<TweetInfos> listTweets, String tweet, int classif)
-			throws IOException {
-		float probaPos = probaTweetMood(listTweets, LIST_TWEET_POS, tweet, classif);
+	public int classifierBayes(List<TweetInfos> listTweets, List<TweetInfos> listPos, List<TweetInfos> listNeg, List<TweetInfos> listNeutre, String tweet, int classif)
+	 {
+		float probaPos = probaTweetMood(listTweets, listPos, listNeg, listNeutre, tweet, classif);
 		System.out.println("positifs : " + probaPos);
-		float probaNeg = probaTweetMood(listTweets, LIST_TWEET_NEG, tweet, classif);
+		float probaNeg = probaTweetMood(listTweets, listNeg, listPos, listNeutre, tweet, classif);
 		System.out.println("Negatifs : " + probaNeg);
-		float probaNeutre = probaTweetMood(listTweets,LIST_TWEET_NEUTRE, tweet,
-				classif);
+		float probaNeutre = probaTweetMood(listTweets,listNeutre, listPos, listNeg, tweet, classif);
 		System.out.println("Neutres : " + probaNeutre);
 		if (probaPos > probaNeg && probaPos > probaNeutre) {
 			return 4;

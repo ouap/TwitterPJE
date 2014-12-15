@@ -16,6 +16,7 @@ import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.regex.Pattern;
 
+import classification.classifBayes;
 import twitter4j.Query;
 import twitter4j.Query.ResultType;
 import twitter4j.QueryResult;
@@ -200,10 +201,7 @@ public class Model extends Observable {
 				classe = knn(text, 30, base);
 				break;
 			case 3:
-				/*
-				 * classe = new classifBayes().classifierBayes(fichier, tweet,
-				 * classif);
-				 */
+				 classe = new classifBayes().classifierBayes(listTweets, LIST_TWEET_POS, LIST_TWEET_NEG, LIST_TWEET_NEUTRE, text, 0); /* A FINIR POUR TESTER LES DIFFERENTES CLASSIF ! */
 				break;
 			}
 			tweet.setNote(classe);
