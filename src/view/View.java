@@ -66,6 +66,7 @@ public class View extends JFrame implements Observer {
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 695, 465);
+		setTitle("Outil Twitter");
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -130,7 +131,7 @@ public class View extends JFrame implements Observer {
 		btnBayesUniPres.setBounds(399, 273, 117, 29);
 		panel.add(btnBayesUniPres);
 
-		JButton btnMotsPosneg = new JButton("Pos/Neg");
+		JButton btnMotsPosneg = new JButton("Keyword");
 		btnMotsPosneg.setBounds(141, 273, 117, 29);
 		panel.add(btnMotsPosneg);
 

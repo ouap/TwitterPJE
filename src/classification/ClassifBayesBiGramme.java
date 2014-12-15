@@ -7,7 +7,7 @@ import model.Model;
 import model.Model.Classe;
 import model.TweetInfos;
 
-public class classifBayes {
+public class ClassifBayesBiGramme {
 
 	/**
 	 * Fonction qui permet de mettre a la puissance b
@@ -16,7 +16,7 @@ public class classifBayes {
 	 * @param b
 	 * @return a puissance b
 	 */
-	public static float myPow(float a, float b) {
+	private static float myPow(float a, float b) {
 		float res = 1;
 		for (int i = 0; i < b; i++) {
 			res *= a;
@@ -33,12 +33,12 @@ public class classifBayes {
 	 * @return
 	 * @throws IOException
 	 */
-	public static int[] nbTweetsMood(List<TweetInfos> listMood) {
+	private static int[] nbTweetsMoodBiGramme(List<TweetInfos> listMood) {
 		int[] res = new int[2];
 		int cpt = 0;
 		res[0] = listMood.size();
 		for (int i = 0; i < listMood.size(); i++) {
-			cpt += listMood.get(i).getTweet().length();
+			cpt += listMood.get(i).getTweet().length() - 1;
 		}
 		res[1] = cpt;
 		return res;
@@ -55,15 +55,15 @@ public class classifBayes {
 	 * @return mots
 	 * @throws IOException
 	 */
-	public static String[] tabMotsMood(List<TweetInfos> listMood) {
-		int tab[] = nbTweetsMood(listMood);
+	private static String[] tabMotsMoodBiGramme(List<TweetInfos> listMood) {
+		int tab[] = nbTweetsMoodBiGramme(listMood);
 		String resTmp[] = new String[tab[1]];
 		int cpt = 0;
 		int i, j;
 		for (i = 0; i < listMood.size(); i++) {
 			String[] tmp = listMood.get(i).getTweet().split(" ");
-			for (j = 0; j < tmp.length; j++) {
-				resTmp[cpt] = tmp[j];
+			for (j = 0; j < tmp.length - 1; j++) {
+				resTmp[cpt] = tmp[j] + " " + tmp[j + 1];
 				cpt++;
 			}
 		}
@@ -80,10 +80,10 @@ public class classifBayes {
 		String res[] = new String[cpt2];
 		int tmp = 1;
 		res[0] = resTmp[0];
-		for (i = 0; i < cpt2; i++) {
+		for (i = 0; i < res.length; i++) {
 			int alreadyPresent = 0;
 			for (j = 0; j < i; j++) {
-				if (resTmp[i] == resTmp[j])
+				if ((resTmp[i] == resTmp[j]))
 					alreadyPresent = 1;
 			}
 			if ((alreadyPresent == 0) && (tmp < cpt2)) {
@@ -105,7 +105,7 @@ public class classifBayes {
 	 *            la base d'apprentissage (soit negatifs, positifs ou neutres)
 	 * @return
 	 */
-	public static int[] nbMots(String[] mots, List<TweetInfos> listMood) {
+	private static int[] nbMotsBiGramme(String[] mots, List<TweetInfos> listMood) {
 		int nbMots[] = new int[mots.length];
 		int i, j, k;
 		for (i = 0; i < mots.length; i++) {
@@ -113,9 +113,9 @@ public class classifBayes {
 		}
 		for (i = 0; i < listMood.size(); i++) {
 			String tmp[] = listMood.get(i).getTweet().split(" ");
-			for (j = 0; j < tmp.length; j++) {
+			for (j = 0; j < tmp.length - 1; j++) {
 				for (k = 0; k < mots.length; k++) {
-					if (tmp[j].equals(mots[k])) {
+					if ((tmp[j] + " " + tmp[j + 1]).equals(mots[k])) {
 						nbMots[k]++;
 					}
 				}
@@ -124,7 +124,7 @@ public class classifBayes {
 		return nbMots;
 	}
 
-	public static int nbMotsTotalMood(int[] nbMots) {
+	public static int nbMotsTotalMoodBiGramme(int[] nbMots) {
 		int nbTot = 0;
 		for (int nbMot : nbMots) {
 			nbTot += nbMot;
@@ -132,18 +132,28 @@ public class classifBayes {
 		return nbTot;
 	}
 
-	public static String[] tweetToTab(String tweet) {
+	/**
+	 * Calcul du tableau de biGramme pour un tweet
+	 * 
+	 * @param tweet
+	 * @return
+	 */
+
+	private static String[] tweetToTabBiGramme(String tweet) {
 		String[] tab = tweet.split(" ");
+		String[] biGramme = new String[tab.length - 1];
 		if (tweet.length() == 0) {
 			return tab;
 		}
 		int cpt = 1;
 		int tmp;
 		int pos = 1;
-		for (int i = 1; i < tab.length; i++) {
+		biGramme[0] = tab[0] + " " + tab[1];
+		for (int i = 1; i < tab.length - 1; i++) {
 			tmp = 0;
+			biGramme[i] = tab[i] + " " + tab[i + 1];
 			for (int j = 0; j < i; j++) {
-				if (tab[i].equals(tab[j])) {
+				if (biGramme[i].equals(biGramme[j])) {
 					tmp = 1;
 				}
 			}
@@ -151,33 +161,37 @@ public class classifBayes {
 				cpt++;
 			}
 		}
-		String motsTweet[] = new String[cpt];
-		motsTweet[0] = tab[0];
-		for (int k = 1; k < tab.length; k++) {
+		String motsTweetBiGramme[] = new String[cpt];
+		motsTweetBiGramme[0] = biGramme[0];
+		for (int k = 1; k < biGramme.length; k++) {
 			tmp = 0;
 			for (int l = 0; l < pos; l++) {
-				if (motsTweet[l].equals(tab[k])) {
+				if (motsTweetBiGramme[l].equals(biGramme[k])) {
 					tmp = 1;
 				}
 			}
 			if (tmp == 0) {
-				motsTweet[pos] = tab[k];
+				motsTweetBiGramme[pos] = biGramme[k];
 				pos++;
 			}
 		}
-		return motsTweet;
+		return motsTweetBiGramme;
 	}
 
-	public static int[] nbMotstweet(String tweet) {
+	private static int[] nbMotstweetBiGramme(String tweet) {
 		int cpt;
-		String[] motsTweet = tweetToTab(tweet);
+		String[] motsTweet = tweetToTabBiGramme(tweet);
 		int[] nbMots = new int[motsTweet.length];
 		String[] sp = tweet.split(" ");
+		String[] biGrammeEntier = new String[sp.length - 1];
+		for (int j = 0; j < biGrammeEntier.length; j++) {
+			biGrammeEntier[j] = sp[j] + " " + sp[j + 1];
+		}
 		for (int i = 0; i < motsTweet.length; i++) {
 			cpt = 0;
-			for (String element : sp) {
+			for (String element : biGrammeEntier) {
 				if (element.equals(motsTweet[i])) {
-					cpt += 1;
+					cpt += 1.0;
 				}
 			}
 			nbMots[i] = cpt;
@@ -185,28 +199,28 @@ public class classifBayes {
 		return nbMots;
 	}
 
-	public static float probaTweetMood(List<TweetInfos> listTweets,
+	private static float probaTweetMoodBiGramme(List<TweetInfos> listTweets,
 			List<TweetInfos> listMood, List<TweetInfos> secondList,
 			List<TweetInfos> thirdList, String tweet, int classif) {
-		int nbTweetsMood[] = nbTweetsMood(listTweets);
+		int nbTweetsMood[] = nbTweetsMoodBiGramme(listTweets);
 		int nbTweets = listTweets.size();
 
-		String[] motsMood = tabMotsMood(listMood);
-		String[] secondMotsMood = tabMotsMood(secondList);
-		String[] thirdMotsMood = tabMotsMood(thirdList);
+		String[] motsMood = tabMotsMoodBiGramme(listMood);
+		String[] secondMotsMood = tabMotsMoodBiGramme(secondList);
+		String[] thirdMotsMood = tabMotsMoodBiGramme(thirdList);
 
-		int nbMotsMood[] = nbMots(motsMood, listMood);
-		int nbMotsMoodSecond[] = nbMots(secondMotsMood, secondList);
-		int nbMotsMoodThird[] = nbMots(thirdMotsMood, thirdList);
+		int nbMotsMood[] = nbMotsBiGramme(motsMood, listMood);
+		int nbMotsMoodSecond[] = nbMotsBiGramme(secondMotsMood, secondList);
+		int nbMotsMoodThird[] = nbMotsBiGramme(thirdMotsMood, thirdList);
 
-		int nbMotsTotMood = nbMotsTotalMood(nbMotsMood);
-		int nbMotsTotSecond = nbMotsTotalMood(nbMotsMoodSecond);
-		int nbMotsTotThird = nbMotsTotalMood(nbMotsMoodThird);
+		int nbMotsTotMood = nbMotsTotalMoodBiGramme(nbMotsMood);
+		int nbMotsTotSecond = nbMotsTotalMoodBiGramme(nbMotsMoodSecond);
+		int nbMotsTotThird = nbMotsTotalMoodBiGramme(nbMotsMoodThird);
 
 		int nbTotal = nbMotsTotMood + nbMotsTotSecond + nbMotsTotThird;
 
-		String[] motsTweet = tweetToTab(tweet);
-		int[] nbMotsTweet = nbMotstweet(tweet);
+		String[] motsTweet = tweetToTabBiGramme(tweet);
+		int[] nbMotsTweet = nbMotstweetBiGramme(tweet);
 		float probaMood = 0;
 		probaMood = nbTweetsMood[0] / nbTweets;
 		float proba = 0;
@@ -221,13 +235,12 @@ public class classifBayes {
 							}
 							if (classif == 0) {
 								/* Presence */
-
-								probaMot = (float) (nbMotsMood[j] + 1)
-										/ (float) (nbMotsTotMood + nbTotal);
+								probaMot = ((float) (nbMotsMood[j] + 1))
+										/ ((float) (nbMotsTotMood + nbTotal));
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										((float) (nbMotsMood[j] + 1) / (float) (nbMotsTotMood + nbTotal)),
+										(((float) (nbMotsMood[j] + 1)) / ((float) (nbMotsTotMood + nbTotal))),
 										nbMotsTweet[i]);
 
 							}
@@ -253,20 +266,19 @@ public class classifBayes {
 	 * @return
 	 * @throws IOException
 	 */
-	public static int classifierBayes(List<TweetInfos> listTweets,
+	public static int classifierBayesBiGramme(List<TweetInfos> listTweets,
 			String tweet, int classif) {
-
 		List<TweetInfos> listNeg, listPos, listNeutre;
 		listNeg = Model.getTweetByClasse(Classe.NEGATIF);
 		listNeutre = Model.getTweetByClasse(Classe.NEUTRE);
 		listPos = Model.getTweetByClasse(Classe.POSITIF);
 
-		float probaPos = probaTweetMood(listTweets, listPos, listNeg,
+		float probaPos = probaTweetMoodBiGramme(listTweets, listPos, listNeg,
 				listNeutre, tweet, classif);
-		float probaNeg = probaTweetMood(listTweets, listNeg, listPos,
+		float probaNeg = probaTweetMoodBiGramme(listTweets, listNeg, listPos,
 				listNeutre, tweet, classif);
-		float probaNeutre = probaTweetMood(listTweets, listNeutre, listPos,
-				listNeg, tweet, classif);
+		float probaNeutre = probaTweetMoodBiGramme(listTweets, listNeutre,
+				listPos, listNeg, tweet, classif);
 		if (probaPos > probaNeg && probaPos > probaNeutre) {
 			return 4;
 		} else {

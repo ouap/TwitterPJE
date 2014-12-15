@@ -11,8 +11,9 @@ import model.Model.Classe;
 import model.TweetInfos;
 import view.BarChart;
 import view.PieChart;
-import classification.classifBayes;
-import classification.classifBayesBiGramme;
+import classification.ClassifBayes;
+import classification.ClassifBayesBiGramme;
+import classification.ClassifKnn;
 
 public class ValidationCroisee {
 	List<List<TweetInfos>> sousEnsembles;
@@ -112,18 +113,19 @@ public class ValidationCroisee {
 			List<TweetInfos> baseCalcul = concatEnsemble(i);
 
 			for (TweetInfos tweetcourrant : sousEnsembles.get(i)) {
-				classeKnn = Model.knn(tweetcourrant.getTweet(), 30, baseCalcul);
+				classeKnn = ClassifKnn.knn(tweetcourrant.getTweet(), 30,
+						baseCalcul);
 
 				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
 
-				classeBayesUniPres = classifBayes.classifierBayes(baseCalcul,
+				classeBayesUniPres = ClassifBayes.classifierBayes(baseCalcul,
 						tweetcourrant.getTweet(), 0);
-				classeBayesUniFreq = classifBayes.classifierBayes(baseCalcul,
+				classeBayesUniFreq = ClassifBayes.classifierBayes(baseCalcul,
 						tweetcourrant.getTweet(), 1);
-				classeBayesBiGPres = classifBayesBiGramme
+				classeBayesBiGPres = ClassifBayesBiGramme
 						.classifierBayesBiGramme(baseCalcul,
 								tweetcourrant.getTweet(), 0);
-				classeBayesBiGFreq = classifBayesBiGramme
+				classeBayesBiGFreq = ClassifBayesBiGramme
 						.classifierBayesBiGramme(baseCalcul,
 								tweetcourrant.getTweet(), 1);
 
@@ -153,13 +155,19 @@ public class ValidationCroisee {
 			}
 		}
 
-		dataBayes.put("UnigrammeFreq", errBayesUniFreq);
-		dataBayes.put("UnigrammePres", errBayesUniPres);
-		dataBayes.put("BigrammeFreq", errBayesBigFreq);
-		dataBayes.put("BigrammePres", errBayesBigPres);
+		dataBayes.put("UnigrammeFreq",
+				(int) (((float) errBayesUniFreq / reference.size()) * 100));
+		dataBayes.put("UnigrammePres",
+				(int) (((float) errBayesUniPres / reference.size()) * 100));
+		dataBayes.put("BigrammeFreq",
+				(int) (((float) errBayesBigFreq / reference.size()) * 100));
+		dataBayes.put("BigrammePres",
+				(int) (((float) errBayesBigPres / reference.size()) * 100));
 
-		dataKnnPosNeg.put("Knn", errKnn);
-		dataKnnPosNeg.put("Pos/Neg", errPosNeg);
+		dataKnnPosNeg.put("Knn",
+				(int) (((float) errKnn / reference.size()) * 100));
+		dataKnnPosNeg.put("Pos/Neg",
+				(int) (((float) errPosNeg / reference.size()) * 100));
 
 	}
 
@@ -204,7 +212,7 @@ public class ValidationCroisee {
 	}
 
 	public void afficherKnnData(Map<String, Integer> dataKnn) {
-		new BarChart("Statistiques Knn", dataKnn);
+		new BarChart("Statistiques Knn & KeyWord", dataKnn);
 	}
 
 }

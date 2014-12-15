@@ -55,7 +55,7 @@ public class BarChart extends JFrame {
 	private static JFreeChart createChart(String title,
 			CategoryDataset paramCategoryDataset) {
 		JFreeChart localJFreeChart = ChartFactory.createBarChart(title, "Algo",
-				"NbErreurs", paramCategoryDataset);
+				"NbErreurs (%)", paramCategoryDataset);
 		CategoryPlot localCategoryPlot = (CategoryPlot) localJFreeChart
 				.getPlot();
 		localCategoryPlot.setDomainGridlinesVisible(true);

@@ -23,7 +23,7 @@ public class NoterController implements ActionListener {
 
 			if (nom.equals("Knn")) {
 				model.noter(model.getListTweets(), 2);
-			} else if (nom.equals("Pos/Neg")) {
+			} else if (nom.equals("Keyword")) {
 				model.noter(model.getListTweets(), 1);
 			} else if (nom.equals("BayesUniPres")) {
 				model.noter(model.getListTweets(), 3);
