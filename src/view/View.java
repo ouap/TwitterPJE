@@ -195,8 +195,8 @@ public class View extends JFrame implements Observer {
 				.getModel();
 		modelTmp.clear();
 
-		for (TweetInfos tweet : listTweet) {
-			modelTmp.addElement("" + tweet.getId());
+		for (int i = 1; i < listTweet.size(); i++) {
+			modelTmp.addElement("Tweet nº" + i);
 		}
 
 		list.setModel(modelTmp);

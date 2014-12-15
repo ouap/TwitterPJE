@@ -14,3 +14,7 @@ twitter4j.properties
 *.DS_Store
 __MACOSX/tweets/._negative.txt
 __MACOSX/tweets/._positive.txt
+
+*.properties
+
+twitter4j.properties
