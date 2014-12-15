@@ -31,16 +31,16 @@ import view.View;
  * @since Twitter4J 2.1.7
  */
 public class Model extends Observable {
-	private List<TweetInfos> listTweets;
-	private List<TweetInfos> base;
+	private static List<TweetInfos> listTweets;
+	private static List<TweetInfos> base;
 
 	public enum Classe {
 		POSITIF, NEGATIF, NEUTRE
 	};
 
-	static List<TweetInfos> LIST_TWEET_POS;
-	static List<TweetInfos> LIST_TWEET_NEG;
-	static List<TweetInfos> LIST_TWEET_NEUTRE;
+	private static List<TweetInfos> LIST_TWEET_POS;
+	private static List<TweetInfos> LIST_TWEET_NEG;
+	private static List<TweetInfos> LIST_TWEET_NEUTRE;
 
 	public String rateLimit;
 	public String recherche;
@@ -59,7 +59,7 @@ public class Model extends Observable {
 	/**
 	 * @return la liste de tweets de la base d'apprentissage
 	 */
-	public List<TweetInfos> getBase() {
+	public static List<TweetInfos> getBase() {
 		return base;
 	}
 
@@ -119,6 +119,7 @@ public class Model extends Observable {
 				listTweets.add(new TweetInfos(status.getId(), status.getUser()
 						.getName(), status.getText(), status.getCreatedAt()
 						.toString(), keyWord, -1));
+
 			}
 			setChanged();
 			notifyObservers();
@@ -136,7 +137,7 @@ public class Model extends Observable {
 	 * listes en fonction de leur classe
 	 *
 	 */
-	public void chargerBaseTweet() {
+	public static void chargerBaseTweet() {
 		base = new ArrayList<TweetInfos>();
 		listTweets = new ArrayList<TweetInfos>();
 		LIST_TWEET_NEG = new ArrayList<TweetInfos>();
@@ -611,7 +612,6 @@ public class Model extends Observable {
 
 		}
 
-		System.out.println("Note finale : " + vote(voisins));
 		return vote(voisins);
 	}
 

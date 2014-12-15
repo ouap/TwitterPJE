@@ -36,7 +36,7 @@ import controler.SearchController;
  * Vue
  *
  */
-public class View extends JFrame implements Observer {
+public class Test extends JFrame implements Observer {
 
 	/**
 	 * 
@@ -44,7 +44,7 @@ public class View extends JFrame implements Observer {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField searchField;
-	public JLabel limitLabel, userContent, iDContent;
+	public JLabel limitLabel, userContent;
 	public JTextArea tweetContent;
 	public JComboBox<String> comboBox;
 	public JList<String> list;
@@ -54,7 +54,7 @@ public class View extends JFrame implements Observer {
 	 * Création de la fenetre
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public View(Model m) {
+	public Test(Model m) {
 		// Model
 		model = m;
 		model.addObserver(this);
@@ -86,15 +86,6 @@ public class View extends JFrame implements Observer {
 		panel.setBounds(152, 39, 442, 320);
 		contentPane.add(panel);
 		panel.setLayout(null);
-
-		JLabel labelId = new JLabel("ID:");
-		labelId.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		labelId.setBounds(11, 36, 61, 16);
-		panel.add(labelId);
-
-		iDContent = new JLabel("New label");
-		iDContent.setBounds(67, 36, 200, 16);
-		panel.add(iDContent);
 
 		JLabel labelText = new JLabel("Text :");
 		labelText.setFont(new Font("Lucida Grande", Font.BOLD, 13));
@@ -147,6 +138,15 @@ public class View extends JFrame implements Observer {
 		JSeparator separator = new JSeparator();
 		separator.setBounds(11, 215, 117, 16);
 		panel.add(separator);
+
+		JLabel labelId = new JLabel("ID:");
+		labelId.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		labelId.setBounds(11, 36, 61, 16);
+		panel.add(labelId);
+
+		JLabel iDContent = new JLabel("New label");
+		iDContent.setBounds(67, 36, 61, 16);
+		panel.add(iDContent);
 
 		// Model List
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
