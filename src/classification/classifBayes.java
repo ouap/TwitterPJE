@@ -220,7 +220,7 @@ public class classifBayes {
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										(nbMotsMood[j] / nbMotsTot[j]),
+										((nbMotsMood[j]+1) / (nbMotsTot[j]+nbMotsTotMood)),
 										nbMotsTweet[i]);
 
 							}
