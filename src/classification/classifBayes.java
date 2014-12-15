@@ -1,17 +1,11 @@
 package classification;
+import java.util.List;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
+import model.TweetInfos;
 public class classifBayes {
 
 	/**
-	 * Fonction qui permet de mettre a � la puissance b
+	 * Fonction qui permet de mettre a la puissance b
 	 * 
 	 * @param a
 	 * @param b
@@ -33,62 +27,15 @@ public class classifBayes {
 	 * @param fichier
 	 * @return
 	 * @throws IOException
-	 */
-	public static float[] nbTweetsMood(String fichier) throws IOException {
-		float res[] = new float[6];
-		float pos = 0; // nombre de tweets positifs
-		float nbMotsPos = 0; // nombre de mots positifs en tout
-		float neg = 0; // nombre de tweets negatifs
-		float nbMotsNeg = 0; // nombre de mots negatifs en tout
-		float neutre = 0; // nombre de tweets neutres
-		float nbMotsNeutre = 0; // nombre de mots neutres en tout
-		FileWriter fwPos = new FileWriter("positifs.csv", false);
-		FileWriter fwNeg = new FileWriter("negatifs.csv", false);
-		FileWriter fwNeutres = new FileWriter("neutres.csv", false);
-
-		try {
-			InputStream ips = new FileInputStream(fichier);
-			InputStreamReader ipsr = new InputStreamReader(ips);
-			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			BufferedWriter outputPos = new BufferedWriter(fwPos);
-			BufferedWriter outputNeg = new BufferedWriter(fwNeg);
-			BufferedWriter outputNeutres = new BufferedWriter(fwNeutres);
-			while ((ligne = br.readLine()) != null) {
-				String tab[] = ligne.split(";");
-				String sp[] = tab[2].split(" ");
-				if (Integer.parseInt(tab[5]) == 4) {
-					outputPos.write(ligne + "\n");
-					outputPos.flush();
-					pos++;
-					nbMotsPos += sp.length;
-				}
-				if (Integer.parseInt(tab[5]) == 2) {
-					outputNeutres.write(ligne + "\n");
-					outputNeutres.flush();
-					neutre++;
-					nbMotsNeutre += sp.length;
-				}
-				if (Integer.parseInt(tab[5]) == 0) {
-					outputNeg.write(ligne + "\n");
-					outputNeg.flush();
-					neg++;
-					nbMotsNeg += sp.length;
-				}
-			}
-			br.close();
-			outputPos.close();
-			outputNeutres.close();
-			outputNeg.close();
-		} catch (Exception e) {
-			System.out.println(e.toString());
+	 */	
+	public static int[] nbTweetsMood(List<TweetInfos> listMood){
+		int[] res = new int[2];
+		int cpt = 0;
+		res[0] = listMood.size();
+		for(int i=0;i<listMood.size();i++){
+			cpt += listMood.get(i).getTweet().length();
 		}
-		res[0] = neg;
-		res[1] = nbMotsNeg;
-		res[2] = neutre;
-		res[3] = nbMotsNeutre;
-		res[4] = pos;
-		res[5] = nbMotsPos;
+		res[1] = cpt;
 		return res;
 	}
 
@@ -103,62 +50,45 @@ public class classifBayes {
 	 * @return mots
 	 * @throws IOException
 	 */
-	public static String[] tabMotsMood(String fichier, String fichier2)
-			throws IOException {
-		int tab = 0;
-		if (fichier2.equals("positifs.csv")) {
-			tab = Math.round(nbTweetsMood(fichier)[5]);
-		} else {
-			if (fichier2.equals("negatifs.csv")) {
-				tab = Math.round(nbTweetsMood(fichier)[1]);
-			} else {
-				if (fichier2.equals("neutres.csv")) {
-					tab = Math.round(nbTweetsMood(fichier)[3]);
-				}
-			}
-		}
-		String res[] = new String[tab];
-		int k = 0;
-		for (int i = 0; i < tab; i++) {
-			res[i] = null;
-		}
-		try {
-			InputStream ips = new FileInputStream(fichier2);
-			InputStreamReader ipsr = new InputStreamReader(ips);
-			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			while ((ligne = br.readLine()) != null) {
-				String sp1[] = ligne.split(";");
-				String sp[] = sp1[2].split(" ");
-				for (String element : sp) {
-					int alreadyPresent = 0;
-					for (int j = 0; j < k; j++) {
-						if (element.equals(res[j])) {
-							alreadyPresent = 1;
-						}
-					}
-					if (alreadyPresent == 0) {
-						res[k] = element;
-						k++;
-					}
-				}
-			}
-			br.close();
-		} catch (Exception e) {
-			System.out.println(e.toString());
-		}
+	public static String[] tabMotsMood(List<TweetInfos> listMood){
+		int tab[] = nbTweetsMood(listMood);
+		String resTmp[] = new String[tab[1]];
 		int cpt = 0;
-
-		while (((cpt + 1) < res.length) && (res[cpt + 1] != null)) {
-			cpt++;
+		int i,j;
+		for(i=0;i<listMood.size();i++){
+			String[] tmp = listMood.get(i).getTweet().split(" ");
+			for(j=0;j<tmp.length;j++){
+				resTmp[cpt] = tmp[j];
+				cpt++;
+			}
 		}
-
-		String[] mots = new String[cpt];
-		for (int i = 0; i < cpt; i++) {
-			mots[i] = res[i];
+		int cpt2 = 1;
+		for(i = 1;i<resTmp.length;i++){
+			int alreadyPresent = 0;
+			for(j = 0;j<i;j++){
+				if(resTmp[i] == resTmp[j])
+					alreadyPresent = 1;
+			}
+			if (alreadyPresent == 0)
+				cpt2++;
 		}
-		return mots;
+		String res[] = new String[cpt2];
+		int tmp = 1;
+		res[0] = resTmp[0];
+		for(i=0;i<res.length;i++){
+			int alreadyPresent = 0;
+			for(j=0;j<i;j++){
+				if(resTmp[i] == resTmp[j])
+					alreadyPresent = 1;
+			}
+			if (alreadyPresent == 0){
+				res[tmp] = resTmp[i];
+				tmp++;
+			}
+		}
+		return res;
 	}
+
 
 	/**
 	 * Pour un tableau deja calcule avec les mots presents dans les tweets, on
@@ -171,37 +101,29 @@ public class classifBayes {
 	 *            la base d'apprentissage (soit negatifs, positifs ou neutres)
 	 * @return
 	 */
-	public static float[] nbMots(String[] mots, String fichier) {
-		float nbMots[] = new float[mots.length];
-		for (int i = 0; i < mots.length; i++) {
+	public static int[] nbMots(String[] mots,List<TweetInfos> listMood) {
+		int nbMots[] = new int[mots.length];
+		int i,j,k;
+		for(i=0;i<mots.length;i++){
 			nbMots[i] = 0;
 		}
-		try {
-			InputStream ips = new FileInputStream(fichier);
-			InputStreamReader ipsr = new InputStreamReader(ips);
-			BufferedReader br = new BufferedReader(ipsr);
-			String ligne;
-			while ((ligne = br.readLine()) != null) {
-				String sp1[] = ligne.split(";");
-				String sp[] = sp1[2].split(" ");
-				for (String element : sp) {
-					for (int j = 0; j < mots.length; j++) {
-						if (element.equals(mots[j])) {
-							nbMots[j]++;
-						}
+		for(i=0;i<listMood.size();i++){
+			String tmp[] = listMood.get(i).getTweet().split(" ");
+			for(j=0;j<tmp.length;j++){
+				for(k=0;k<mots.length;k++){
+					if(tmp[j]==mots[k]){
+						nbMots[k]++;
 					}
 				}
 			}
-			br.close();
-		} catch (Exception e) {
-			System.out.println(e.toString());
 		}
 		return nbMots;
 	}
-
-	public static float nbMotsTotalMood(float[] nbMots) {
-		float nbTot = 0;
-		for (float nbMot : nbMots) {
+	
+	
+	public static int nbMotsTotalMood(int[] nbMots) {
+		int nbTot = 0;
+		for (int nbMot : nbMots) {
 			nbTot += nbMot;
 		}
 		return nbTot;
@@ -243,16 +165,16 @@ public class classifBayes {
 		return motsTweet;
 	}
 
-	public static float[] nbMotstweet(String tweet) {
-		float cpt;
+	public static int[] nbMotstweet(String tweet) {
+		int cpt;
 		String[] motsTweet = tweetToTab(tweet);
-		float[] nbMots = new float[motsTweet.length];
+		int[] nbMots = new int[motsTweet.length];
 		String[] sp = tweet.split(" ");
 		for (int i = 0; i < motsTweet.length; i++) {
 			cpt = 0;
 			for (String element : sp) {
 				if (element.equals(motsTweet[i])) {
-					cpt += 1.0;
+					cpt += 1;
 				}
 			}
 			nbMots[i] = cpt;
@@ -260,28 +182,30 @@ public class classifBayes {
 		return nbMots;
 	}
 
-	public static float probaTweetMood(String fichier, String fichierMood,
-			String tweet, int classif) throws IOException {
-		float nbTweetsMood[] = nbTweetsMood(fichier);
-		float nbTweets = nbTweetsMood[0] + nbTweetsMood[2] + nbTweetsMood[4];
-		String[] motsMood = tabMotsMood(fichier, fichierMood);
-		float nbMotsTot[] = nbMots(motsMood, fichier);
-		float nbMotsMood[] = nbMots(motsMood, fichierMood);
-		float nbMotsTotMood = nbMotsTotalMood(nbMotsMood);
+	
+	public static float probaTweetMood(List<TweetInfos> listTweets,List<TweetInfos> listMood, List<TweetInfos> secondList, List<TweetInfos> thirdList, String tweet, int classif){
+		int nbTweetsMood[] = nbTweetsMood(listTweets);
+		int nbTweets = listTweets.size();
+		
+		String[] motsMood = tabMotsMood(listMood);
+		String[] secondMotsMood = tabMotsMood(secondList);
+		String[] thirdMotsMood = tabMotsMood(thirdList);
+
+		
+		int nbMotsMood[] = nbMots(motsMood, listMood);
+		int nbMotsMoodSecond[] = nbMots(secondMotsMood, secondList);
+		int nbMotsMoodThird[] = nbMots(thirdMotsMood, thirdList);
+		
+		int nbMotsTotMood = nbMotsTotalMood(nbMotsMood);
+		int nbMotsTotSecond = nbMotsTotalMood(nbMotsMoodSecond);
+		int nbMotsTotThird = nbMotsTotalMood(nbMotsMoodThird);
+		
+		int nbTotal = nbMotsTotMood + nbMotsTotSecond + nbMotsTotThird;
+		
 		String[] motsTweet = tweetToTab(tweet);
-		float[] nbMotsTweet = nbMotstweet(tweet);
+		int[] nbMotsTweet = nbMotstweet(tweet);
 		float probaMood = 0;
-		if (fichierMood.equals("positifs.csv")) {
-			probaMood = nbTweetsMood[4] / nbTweets;
-		} else {
-			if (fichierMood.equals("negatifs.csv")) {
-				probaMood = nbTweetsMood[0] / nbTweets;
-			} else {
-				if (fichierMood.equals("neutres.csv")) {
-					probaMood = nbTweetsMood[2] / nbTweets;
-				}
-			}
-		}
+		probaMood = nbTweetsMood[0] / nbTweets;
 		float proba = 0;
 		for (int i = 0; i < motsTweet.length; i++) {
 			if (motsTweet[i].length() > 3) {
@@ -295,11 +219,11 @@ public class classifBayes {
 							if (classif == 0) {
 								/* Presence */
 								probaMot = (nbMotsMood[j] + 1)
-										/ (nbMotsTot[j] + nbMotsTotMood);
+										/ (nbMotsTotMood + nbTotal);
 							} else {
 								/* Frequence */
 								probaMot = myPow(
-										(nbMotsMood[j] / nbMotsTot[j]),
+										((nbMotsMood[j]+1) / (nbMotsTotMood + nbTotal)),
 										nbMotsTweet[i]);
 
 							}
@@ -315,6 +239,8 @@ public class classifBayes {
 		return proba;
 	}
 
+
+
 	/**
 	 * Classification de bayes, classif sera mis � 0 pour la classification par
 	 * pr�sence, � 1 pour la classification par fr�quence
@@ -324,16 +250,14 @@ public class classifBayes {
 	 * @param classif
 	 * @return
 	 * @throws IOException
-	 */
-
-	public static int classifierBayes(String fichier, String tweet, int classif)
-			throws IOException {
-		float probaPos = probaTweetMood(fichier, "positifs.csv", tweet, classif);
+	 */	
+	public int classifierBayes(List<TweetInfos> listTweets, List<TweetInfos> listPos, List<TweetInfos> listNeg, List<TweetInfos> listNeutre, String tweet, int classif)
+	 {
+		float probaPos = probaTweetMood(listTweets, listPos, listNeg, listNeutre, tweet, classif);
 		System.out.println("positifs : " + probaPos);
-		float probaNeg = probaTweetMood(fichier, "negatifs.csv", tweet, classif);
+		float probaNeg = probaTweetMood(listTweets, listNeg, listPos, listNeutre, tweet, classif);
 		System.out.println("Negatifs : " + probaNeg);
-		float probaNeutre = probaTweetMood(fichier, "neutres.csv", tweet,
-				classif);
+		float probaNeutre = probaTweetMood(listTweets,listNeutre, listPos, listNeg, tweet, classif);
 		System.out.println("Neutres : " + probaNeutre);
 		if (probaPos > probaNeg && probaPos > probaNeutre) {
 			return 4;

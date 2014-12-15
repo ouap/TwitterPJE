@@ -40,8 +40,8 @@ public class ListController implements ListSelectionListener {
 
 			} else {
 				vue.tweetContent.setBackground(Color.green);
-
 				vue.comboBox.setSelectedIndex(2);
+
 			}
 		}
 	}
