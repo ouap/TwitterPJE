@@ -73,7 +73,7 @@ public class ValidationCroisee {
 
 	}
 
-	int calculerTxErreur(int k) throws IOException {
+	void calculerTxErreur(int k) throws IOException {
 		int classeKnn, classeBayes, classeBayesBiG, classePosNeg;
 		int errKnn, errBayes, errBayesBiG, errPosNeg;
 		errBayes = errBayesBiG = errKnn = errPosNeg = 0;
@@ -118,7 +118,6 @@ public class ValidationCroisee {
 		System.out.println("Nb erreurs knn : " + errKnn + "/"
 				+ reference.size() + "\nNb erreurs Pos/Neg : " + errPosNeg
 				+ "/" + reference.size());
-		return 0;
 	}
 
 	/**
@@ -135,6 +134,7 @@ public class ValidationCroisee {
 				concat.addAll(sousEnsembles.get(i));
 			}
 		}
+
 		System.out.println("Taille BaseUnion : " + concat.size());
 		return concat;
 	}

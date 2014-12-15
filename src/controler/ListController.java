@@ -1,5 +1,6 @@
 package controler;
 
+import java.awt.Color;
 import java.util.List;
 
 import javax.swing.JList;
@@ -25,16 +26,21 @@ public class ListController implements ListSelectionListener {
 		int index = ((JList<?>) e.getSource()).getSelectedIndex();
 
 		if (!e.getValueIsAdjusting()) {
+			vue.iDContent.setText("" + tweets.get(index).getId());
 			vue.userContent.setText(tweets.get(index).getUser());
 			vue.tweetContent.setText(tweets.get(index).getTweet());
 			// Changement de la note dans la combobox
-
 			if (model.getListTweets().get(index).getNote() == 0) {
 				vue.comboBox.setSelectedIndex(0);
+				vue.tweetContent.setBackground(Color.red);
 
 			} else if (model.getListTweets().get(index).getNote() == 2) {
 				vue.comboBox.setSelectedIndex(1);
+				vue.tweetContent.setBackground(Color.blue);
+
 			} else {
+				vue.tweetContent.setBackground(Color.green);
+
 				vue.comboBox.setSelectedIndex(2);
 			}
 		}
