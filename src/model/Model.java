@@ -353,7 +353,11 @@ public class Model extends Observable {
 		String l9 = Pattern.compile(" \\? |\\? | \\?").matcher(l8)
 				.replaceAll(" ");
 		String l10 = Pattern.compile(" : | :|: ").matcher(l9).replaceAll(" ");
-		String cleanTweet = Pattern.compile(" , | ,|, ").matcher(l10)
+		String l11 = Pattern.compile("é|è|ê").matcher(l10).replaceAll("e");
+		String l12 = Pattern.compile("ù").matcher(l11).replaceAll("u");
+		String l13 = Pattern.compile("à").matcher(l12).replaceAll("a");
+		String l14 = Pattern.compile("ô").matcher(l13).replaceAll("o");
+		String cleanTweet = Pattern.compile(" , | ,|, ").matcher(l14)
 				.replaceAll(" ");
 
 		return cleanTweet.toLowerCase();
