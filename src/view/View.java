@@ -11,6 +11,7 @@ import java.util.Observer;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,7 +28,9 @@ import javax.swing.border.LineBorder;
 import model.Model;
 import model.TweetInfos;
 import twitter4j.TwitterException;
-import controler.ComboboxListener;
+import controler.AnalyseController;
+import controler.CheckBoxController;
+import controler.ComboboxController;
 import controler.ListController;
 import controler.NoterController;
 import controler.SearchController;
@@ -61,13 +64,14 @@ public class View extends JFrame implements Observer {
 		model.chargerBaseTweet();
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 600, 400);
+		setBounds(100, 100, 695, 465);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 
 		JLabel labelRecherche = new JLabel("Entrez recherche :");
+		labelRecherche.setFont(new Font("Lucida Grande", Font.PLAIN, 13));
 		labelRecherche.setBounds(152, 11, 112, 16);
 		contentPane.add(labelRecherche);
 
@@ -83,50 +87,50 @@ public class View extends JFrame implements Observer {
 		JPanel panel = new JPanel();
 		panel.setBorder(new BevelBorder(BevelBorder.RAISED, null, null, null,
 				null));
-		panel.setBounds(152, 39, 442, 320);
+		panel.setBounds(152, 39, 525, 386);
 		contentPane.add(panel);
 		panel.setLayout(null);
 
 		JLabel labelId = new JLabel("ID:");
 		labelId.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		labelId.setBounds(11, 36, 61, 16);
+		labelId.setBounds(56, 36, 68, 16);
 		panel.add(labelId);
 
-		iDContent = new JLabel("New label");
-		iDContent.setBounds(67, 36, 200, 16);
+		iDContent = new JLabel("");
+		iDContent.setBounds(141, 36, 200, 16);
 		panel.add(iDContent);
 
 		JLabel labelText = new JLabel("Text :");
 		labelText.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		labelText.setBounds(11, 103, 67, 25);
+		labelText.setBounds(56, 103, 67, 25);
 		panel.add(labelText);
 
 		JLabel labelUser = new JLabel("User :");
 		labelUser.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		labelUser.setBounds(11, 66, 72, 25);
+		labelUser.setBounds(56, 66, 72, 25);
 		panel.add(labelUser);
 
-		userContent = new JLabel("newlabel");
-		userContent.setBounds(67, 70, 201, 16);
+		userContent = new JLabel("");
+		userContent.setBounds(140, 70, 201, 16);
 		panel.add(userContent);
 
 		tweetContent = new JTextArea();
 		tweetContent.setEditable(false);
 		tweetContent.setLineWrap(true);
 		tweetContent.setFont(new Font("Lucida Grande", Font.ITALIC, 13));
-		tweetContent.setBounds(67, 107, 358, 96);
+		tweetContent.setBounds(140, 107, 358, 96);
 		panel.add(tweetContent);
 
 		JButton btnKnn = new JButton("Knn");
-		btnKnn.setBounds(151, 285, 117, 29);
+		btnKnn.setBounds(270, 273, 117, 29);
 		panel.add(btnKnn);
 
 		JButton btnBayesienne = new JButton("Bayesienne");
-		btnBayesienne.setBounds(280, 285, 117, 29);
+		btnBayesienne.setBounds(399, 273, 117, 29);
 		panel.add(btnBayesienne);
 
 		JButton btnMotsPosneg = new JButton("Pos/Neg");
-		btnMotsPosneg.setBounds(22, 285, 117, 29);
+		btnMotsPosneg.setBounds(141, 273, 117, 29);
 		panel.add(btnMotsPosneg);
 
 		JButton btnChargerBase = new JButton("Charger Base");
@@ -136,17 +140,31 @@ public class View extends JFrame implements Observer {
 		comboBox = new JComboBox();
 		comboBox.setModel(new DefaultComboBoxModel(
 				new String[] { "0", "2", "4" }));
-		comboBox.setBounds(67, 232, 72, 29);
+		comboBox.setBounds(141, 232, 72, 29);
 		panel.add(comboBox);
 
 		JLabel noteLabel = new JLabel("Note :");
 		noteLabel.setFont(new Font("Lucida Grande", Font.BOLD, 13));
-		noteLabel.setBounds(16, 237, 61, 16);
+		noteLabel.setBounds(56, 237, 61, 16);
 		panel.add(noteLabel);
 
 		JSeparator separator = new JSeparator();
-		separator.setBounds(11, 215, 117, 16);
+		separator.setBounds(56, 204, 117, 16);
 		panel.add(separator);
+
+		JLabel labelClassement = new JLabel("Classement :");
+		labelClassement.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		labelClassement.setBounds(31, 278, 97, 16);
+		panel.add(labelClassement);
+
+		JButton btnAnalyse = new JButton("Analyse");
+		btnAnalyse.setBounds(141, 333, 117, 29);
+		panel.add(btnAnalyse);
+
+		JLabel lblStats = new JLabel("Stats :");
+		lblStats.setFont(new Font("Lucida Grande", Font.BOLD, 13));
+		lblStats.setBounds(31, 338, 61, 16);
+		panel.add(lblStats);
 
 		// Model List
 		DefaultListModel<String> listModel = new DefaultListModel<String>();
@@ -161,16 +179,23 @@ public class View extends JFrame implements Observer {
 		JScrollPane scroll = new JScrollPane();
 		scroll.setBorder(new LineBorder(new Color(0, 0, 0)));
 
-		scroll.setBounds(6, 42, 134, 313);
+		scroll.setBounds(6, 42, 140, 383);
 
 		scroll.getViewport().setView(list);
 		contentPane.add(scroll);
+
+		JCheckBox checkProxy = new JCheckBox("Proxy");
+		checkProxy.setBounds(566, 7, 112, 23);
+		contentPane.add(checkProxy);
 
 		// On ajoute les controleurs
 		SearchController searchControl = new SearchController(model);
 		NoterController saveControl = new NoterController(model);
 		ListController listControl = new ListController(model, this);
-		ComboboxListener comboListener = new ComboboxListener(model, this);
+		ComboboxController comboControl = new ComboboxController(model, this);
+		CheckBoxController checkControl = new CheckBoxController(model,
+				checkProxy);
+		AnalyseController analyseControl = new AnalyseController();
 		list.addListSelectionListener(listControl);
 		searchField.addActionListener(searchControl);
 		btnChargerBase.addActionListener(new ActionListener() {
@@ -184,7 +209,9 @@ public class View extends JFrame implements Observer {
 		btnKnn.addActionListener(saveControl);
 		btnMotsPosneg.addActionListener(saveControl);
 		btnBayesienne.addActionListener(saveControl);
-		comboBox.addItemListener(comboListener);
+		comboBox.addItemListener(comboControl);
+		checkProxy.addItemListener(checkControl);
+		btnAnalyse.addActionListener(analyseControl);
 		setVisible(true);
 	}
 

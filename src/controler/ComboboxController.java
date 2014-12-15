@@ -9,13 +9,13 @@ import javax.swing.JList;
 import model.Model;
 import view.View;
 
-public class ComboboxListener implements ItemListener {
+public class ComboboxController implements ItemListener {
 	private Model model;
 	JList<String> listTweets;
 	JComboBox combobox;
 	View vue;
 
-	public ComboboxListener(Model m, View vue) {
+	public ComboboxController(Model m, View vue) {
 		model = m;
 		this.vue = vue;
 	}

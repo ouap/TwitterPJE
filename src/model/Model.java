@@ -1,6 +1,7 @@
 package model;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -16,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.regex.Pattern;
 
-import classification.classifBayes;
 import twitter4j.Query;
 import twitter4j.Query.ResultType;
 import twitter4j.QueryResult;
@@ -26,6 +26,7 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import view.View;
+import classification.classifBayes;
 
 /**
  * @author Yusuke Yamamoto - yusuke at mac.com
@@ -64,7 +65,33 @@ public class Model extends Observable {
 		return base;
 	}
 
-	public List<TweetInfos> getTweetByClasse(Classe classe) {
+	public void proxyHandler(int choix) throws IOException {
+
+		String fichier = new java.io.File(".").getCanonicalPath()
+				+ "/twitter4j.properties";
+		InputStream ips = new FileInputStream(fichier);
+		InputStreamReader ipsr = new InputStreamReader(ips);
+		@SuppressWarnings("resource")
+		BufferedReader br = new BufferedReader(ipsr);
+		String read;
+		StringBuffer sb = new StringBuffer();
+
+		for (int i = 0; i < 6; i++) {
+			read = br.readLine();
+			sb.append(read + "\n");
+		}
+		br.close();
+		BufferedWriter out = new BufferedWriter(new FileWriter(fichier));
+		if (choix == 0) {
+			out.write(sb.toString());
+		} else {
+			sb.append("http.proxyHost=cacheserv.univ-lille1.fr\nhttp.proxyPort=3128");
+			out.write(sb.toString());
+		}
+		out.close();
+	}
+
+	public static List<TweetInfos> getTweetByClasse(Classe classe) {
 		switch (classe) {
 		case POSITIF:
 			return LIST_TWEET_POS;
@@ -202,7 +229,9 @@ public class Model extends Observable {
 				classe = knn(text, 30, base);
 				break;
 			case 3:
-				 classe = new classifBayes().classifierBayes(listTweets, LIST_TWEET_POS, LIST_TWEET_NEG, LIST_TWEET_NEUTRE, text, 0); /* A FINIR POUR TESTER LES DIFFERENTES CLASSIF ! */
+				classe = new classifBayes().classifierBayes(listTweets,
+						LIST_TWEET_POS, LIST_TWEET_NEG, LIST_TWEET_NEUTRE,
+						text, 0); /* A FINIR POUR TESTER LES DIFFERENTES CLASSIF ! */
 				break;
 			}
 			tweet.setNote(classe);
