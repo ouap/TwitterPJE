@@ -264,7 +264,7 @@ public class classifBayesBiGramme {
 	 * @return
 	 * @throws IOException
 	 */	
-	public int classifierBayes(List<TweetInfos> listTweets, List<TweetInfos> listPos, List<TweetInfos> listNeg, List<TweetInfos> listNeutre, String tweet, int classif)
+	public int classifierBayesBiGramme(List<TweetInfos> listTweets, List<TweetInfos> listPos, List<TweetInfos> listNeg, List<TweetInfos> listNeutre, String tweet, int classif)
 	 {
 		float probaPos = probaTweetMoodBiGramme(listTweets, listPos, listNeg, listNeutre, tweet, classif);
 		System.out.println("positifs : " + probaPos);
