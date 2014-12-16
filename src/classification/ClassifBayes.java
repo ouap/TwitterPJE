@@ -7,6 +7,12 @@ import model.Model;
 import model.Model.Classe;
 import model.TweetInfos;
 
+/**
+ * Classe pour la classification Bayésienne unigrammes
+ * 
+ * @author sais poux
+ *
+ */
 public class ClassifBayes {
 
 	/**

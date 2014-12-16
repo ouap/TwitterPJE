@@ -9,17 +9,35 @@ import javax.swing.JList;
 import model.Model;
 import view.View;
 
+/**
+ * @author sais poux
+ *
+ */
 public class ComboboxController implements ItemListener {
 	private Model model;
 	JList<String> listTweets;
 	JComboBox combobox;
 	View vue;
 
+	/**
+	 * Creer une nouvelle instance de ComboboxController
+	 * 
+	 * @param m
+	 *            model
+	 * @param vue
+	 *            vue
+	 */
 	public ComboboxController(Model m, View vue) {
 		model = m;
 		this.vue = vue;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent)
+	 */
 	@Override
 	public void itemStateChanged(ItemEvent e) {
 		if (e.getStateChange() == ItemEvent.SELECTED) {

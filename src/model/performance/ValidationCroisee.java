@@ -12,8 +12,8 @@ import model.TweetInfos;
 import view.BarChart;
 import view.PieChart;
 import classification.ClassifBayes;
-import classification.ClassifBayesBiGramme;
 import classification.ClassifKnn;
+import classification.classifKeyword;
 
 public class ValidationCroisee {
 	List<List<TweetInfos>> sousEnsembles;
@@ -28,7 +28,7 @@ public class ValidationCroisee {
 		dataBayes = new HashMap<String, Integer>();
 		Model.chargerBaseTweet();
 		try {
-			calculerTxErreur(5);
+			calculerTxErreur(10);
 		} catch (IOException e) {
 			System.out.println("Erreur lors l'analyse du nombre d'erreurs");
 		}
@@ -98,6 +98,13 @@ public class ValidationCroisee {
 
 	}
 
+	/**
+	 * Fonction qui calcule le taux d'erreur de chaque algo en pourcentage
+	 * 
+	 * @param k
+	 *            le nombre de sous-ensemble
+	 * @throws IOException
+	 */
 	void calculerTxErreur(int k) throws IOException {
 		int classeKnn, classeBayesUniFreq, classeBayesUniPres, classeBayesBiGFreq, classeBayesBiGPres, classePosNeg;
 		int errKnn, errBayesUniFreq, errBayesUniPres, errBayesBigFreq, errBayesBigPres, errPosNeg;
@@ -116,18 +123,19 @@ public class ValidationCroisee {
 				classeKnn = ClassifKnn.knn(tweetcourrant.getTweet(), 30,
 						baseCalcul);
 
-				classePosNeg = Model.getClassePosNeg(tweetcourrant.getTweet());
+				classePosNeg = classifKeyword.getClassePosNeg(tweetcourrant
+						.getTweet());
 
 				classeBayesUniPres = ClassifBayes.classifierBayes(baseCalcul,
 						tweetcourrant.getTweet(), 0);
-				classeBayesUniFreq = ClassifBayes.classifierBayes(baseCalcul,
-						tweetcourrant.getTweet(), 1);
-				classeBayesBiGPres = ClassifBayesBiGramme
-						.classifierBayesBiGramme(baseCalcul,
-								tweetcourrant.getTweet(), 0);
-				classeBayesBiGFreq = ClassifBayesBiGramme
-						.classifierBayesBiGramme(baseCalcul,
-								tweetcourrant.getTweet(), 1);
+				/*
+				 * classeBayesUniFreq = ClassifBayes.classifierBayes(baseCalcul,
+				 * tweetcourrant.getTweet(), 1); classeBayesBiGPres =
+				 * ClassifBayesBiGramme .classifierBayesBiGramme(baseCalcul,
+				 * tweetcourrant.getTweet(), 0); classeBayesBiGFreq =
+				 * ClassifBayesBiGramme .classifierBayesBiGramme(baseCalcul,
+				 * tweetcourrant.getTweet(), 1);
+				 */
 
 				// Verification de la notation de chaque classifieur
 				if (classeKnn != reference.get(tweetcourrant)) {
@@ -141,20 +149,19 @@ public class ValidationCroisee {
 					errBayesUniPres++;
 
 				}
-				if (classeBayesUniFreq != reference.get(tweetcourrant)) {
-					errBayesUniFreq++;
-
-				}
-				if (classeBayesBiGFreq != reference.get(tweetcourrant)) {
-					errBayesBigFreq++;
-				}
-				if (classeBayesBiGPres != reference.get(tweetcourrant)) {
-					errBayesBigPres++;
-				}
+				/*
+				 * if (classeBayesUniFreq != reference.get(tweetcourrant)) {
+				 * errBayesUniFreq++;
+				 * 
+				 * } if (classeBayesBiGFreq != reference.get(tweetcourrant)) {
+				 * errBayesBigFreq++; } if (classeBayesBiGPres !=
+				 * reference.get(tweetcourrant)) { errBayesBigPres++; }
+				 */
 
 			}
 		}
 
+		// Enregistrement des données
 		dataBayes.put("UnigrammeFreq",
 				(int) (((float) errBayesUniFreq / reference.size()) * 100));
 		dataBayes.put("UnigrammePres",
@@ -190,6 +197,10 @@ public class ValidationCroisee {
 		return concat;
 	}
 
+	/**
+	 * Calcule le ratio des tweets positifs, negatifs et neutres de la base
+	 * d'apprentissage
+	 */
 	public void createRatioBase() {
 		float pos, neg, neutre;
 		int total = Model.getBase().size();
@@ -203,16 +214,35 @@ public class ValidationCroisee {
 
 	}
 
+	/**
+	 * Affiche le ratio de la base d'apprentissage
+	 * 
+	 * @param ratioBase
+	 */
 	public void afficherRatioBase(Map<String, Float> ratioBase) {
 		new PieChart("Ratio Tweets Base", ratioBase);
 	}
 
+	/**
+	 * Affiche les donnnées concernant les algorithmes Bayésiens
+	 * 
+	 * @param dataBayes
+	 *            les données des test effectués sur les algorithmes bayésiens
+	 * 
+	 */
 	public void afficherBayesData(Map<String, Integer> dataBayes) {
 		new BarChart("Statistiques Bayes", dataBayes);
 	}
 
-	public void afficherKnnData(Map<String, Integer> dataKnn) {
-		new BarChart("Statistiques Knn & KeyWord", dataKnn);
+	/**
+	 * Affiche les donnnées concernant les algorithmes Knn et Keyword
+	 * 
+	 * @param dataKnnKeyword
+	 *            les données des test effectués sur les algorithmes knn et
+	 *            keyword
+	 */
+	public void afficherKnnData(Map<String, Integer> dataKnnKeyword) {
+		new BarChart("Statistiques Knn & KeyWord", dataKnnKeyword);
 	}
 
 }

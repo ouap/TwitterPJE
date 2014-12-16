@@ -11,10 +11,19 @@ import twitter4j.TwitterException;
 public class SearchController implements ActionListener {
 	private Model model;
 
+	/**
+	 * @param model
+	 */
 	public SearchController(Model model) {
 		this.model = model;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String keyWord = ((JTextField) e.getSource()).getText();

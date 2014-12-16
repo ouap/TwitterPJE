@@ -37,14 +37,11 @@ import controler.SaveController;
 import controler.SearchController;
 
 /**
- * Vue
+ * Vue de l'application
  *
  */
 public class View extends JFrame implements Observer {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTextField searchField;

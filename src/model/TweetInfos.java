@@ -1,5 +1,11 @@
 package model;
 
+/**
+ * Classe représentant les informations d'un tweet
+ * 
+ * @author sais
+ *
+ */
 public class TweetInfos {
 	private long id;
 	private String tweet;
